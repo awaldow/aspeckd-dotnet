@@ -5,10 +5,10 @@ on:
     types: [published]
 
 # contents: read is the minimum required to checkout the repo.
-# id_token: write is required for NuGet.org Trusted Publishing via OIDC.
+# id-token: write is required for NuGet.org Trusted Publishing via OIDC.
 permissions:
   contents: read
-  id_token: write
+  id-token: write
 
 jobs:
   publish:
