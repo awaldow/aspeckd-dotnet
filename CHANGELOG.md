@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.4](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.3...v0.1.4) (2026-03-26)
+
+
+### Bug Fixes
+
+* **ci:** derive NuGet package version from release tag ([33b0ed2](https://github.com/awaldow/aspeckd-dotnet/commit/33b0ed26bdf95f529924541b60b58557fb195587))
+* **ci:** set pack version from release tag ([2c34353](https://github.com/awaldow/aspeckd-dotnet/commit/2c34353b22d1432a19282b0b8a88605024172bd3))
+
 ## [0.1.3](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.2...v0.1.3) (2026-03-26)
 
 
