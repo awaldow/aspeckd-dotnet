@@ -100,15 +100,43 @@ jobs:
           fi
           echo "Release type and version suffix are aligned (prerelease=$IS_PRERELEASE, version=$VERSION)."
 
+      - name: Diagnose version inputs
+        shell: bash
+        run: |
+          echo "=== Recent git tags ==="
+          git tag --sort=-creatordate | head -20
+          echo ""
+          echo "=== git describe ==="
+          git describe --tags --always
+          echo ""
+          echo "=== MSBuild version properties (Aspeckd) ==="
+          dotnet msbuild src/Aspeckd/Aspeckd.csproj \
+            -p:Version=${{ env.PACKAGE_VERSION }} \
+            -p:PackageVersion=${{ env.PACKAGE_VERSION }} \
+            -p:MinVerVersionOverride=${{ env.PACKAGE_VERSION }} \
+            -getProperty:Version \
+            -getProperty:PackageVersion \
+            -getProperty:MinVerVersion 2>/dev/null || true
+          echo ""
+          echo "=== MSBuild version properties (Aspeckd.Core) ==="
+          dotnet msbuild src/Aspeckd.Core/Aspeckd.Core.csproj \
+            -p:Version=${{ env.PACKAGE_VERSION }} \
+            -p:PackageVersion=${{ env.PACKAGE_VERSION }} \
+            -p:MinVerVersionOverride=${{ env.PACKAGE_VERSION }} \
+            -getProperty:Version \
+            -getProperty:PackageVersion \
+            -getProperty:MinVerVersion 2>/dev/null || true
+
       - name: Pack
-        # Version and PackageVersion are forced from the release tag so MinVer's
-        # fallback (0.0.0-alpha.0.N) can never win.
+        # Version, PackageVersion, and MinVerVersionOverride are all forced from
+        # the release tag so MinVer's fallback (0.0.0-alpha.0.N) can never win.
         run: >
           dotnet pack Aspeckd.sln
           --no-restore
           --configuration Release
           -p:Version=${{ env.PACKAGE_VERSION }}
           -p:PackageVersion=${{ env.PACKAGE_VERSION }}
+          -p:MinVerVersionOverride=${{ env.PACKAGE_VERSION }}
           --output artifacts/
 
       - name: Authenticate to NuGet.org (Trusted Publishing)
