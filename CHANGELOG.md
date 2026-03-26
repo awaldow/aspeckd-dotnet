@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.4...v0.1.5) (2026-03-26)
+
+
+### Bug Fixes
+
+* attempt 123 at trusted publishing ([d583d12](https://github.com/awaldow/aspeckd-dotnet/commit/d583d12f5c10776fcf98f1bc2b400edaf4206ae8))
+* **ci:** supply NuGet user and use auth output token for push ([8d95941](https://github.com/awaldow/aspeckd-dotnet/commit/8d95941868a69a8abb72e8899e360b818ca5ea95))
+
 ## [0.1.4](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.3...v0.1.4) (2026-03-26)
 
 
