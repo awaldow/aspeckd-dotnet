@@ -17,7 +17,12 @@
       API metadata via IApiDescriptionGroupCollectionProvider. TFM-specific and
       Microsoft.OpenApi-version-specific logic lives here, keeping Aspeckd.Core evergreen.
     </Description>
+    <PackageTags>aspnet;aspnetcore;ai;agent;llm;api-spec;openapi</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <!--
