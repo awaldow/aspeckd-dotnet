@@ -11,7 +11,12 @@
       IAgentSpecProvider interface. This package carries no ASP.NET Core or Microsoft.OpenApi
       dependency so it remains stable across TFM and library-version upgrades.
     </Description>
+    <PackageTags>ai;agent;llm;api-spec;abstractions</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <!--
