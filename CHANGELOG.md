@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.3](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.2...v0.1.3) (2026-03-26)
+
+
+### Features
+
+* add BasicSample and AnnotatedSample projects under samples/ ([078a17c](https://github.com/awaldow/aspeckd-dotnet/commit/078a17c895d2da8405fd40adac9e6394d142b223))
+* add samples projects ([abad47c](https://github.com/awaldow/aspeckd-dotnet/commit/abad47c679eb273c2c5ab961b04eae6ccde66762))
+
+
+### Bug Fixes
+
+* align sample project TFMs to net8.0;net9.0;net10.0 ([2cf8035](https://github.com/awaldow/aspeckd-dotnet/commit/2cf8035febe12e05501c4b376e581506924f0054))
+
 ## [0.1.2](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.1...v0.1.2) (2026-03-26)
 
 
