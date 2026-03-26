@@ -17,8 +17,8 @@ jobs:
     # Route to the appropriate GitHub Environment so that NuGet.org Trusted
     # Publishing can be scoped per environment and optional approval gates can
     # be added later.  Pre-releases (e.g. alpha/beta/rc tags) go to the
-    # "preview" environment; all other published releases go to "release".
-    environment: ${{ github.event.release.prerelease && 'preview' || 'release' }}
+    # "prerelease" environment; all other published releases go to "release".
+    environment: ${{ github.event.release.prerelease && 'prerelease' || 'release' }}
 
     steps:
       - name: Checkout
@@ -60,21 +60,9 @@ jobs:
           --output artifacts/
 
       - name: Authenticate to NuGet.org (Trusted Publishing)
-        # Exchange the GitHub OIDC token for a short-lived NuGet API key.
-        # The resulting token is masked so it never appears in logs.
-        # See: https://learn.microsoft.com/nuget/nuget-org/publish-a-package#publishing-using-trusted-publishing-with-github-actions
-        run: |
-          OIDC_TOKEN=$(curl -sS \
-            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api.nuget.org" \
-            | jq -r '.value')
-          NUGET_TOKEN=$(curl -sS -X POST \
-            https://www.nuget.org/users/account/oidc/authenticate \
-            -H "Content-Type: application/json" \
-            -d "{\"token\": \"$OIDC_TOKEN\"}" \
-            | jq -r '.token')
-          echo "::add-mask::$NUGET_TOKEN"
-          echo "NUGET_TOKEN=$NUGET_TOKEN" >> "$GITHUB_ENV"
+        # NuGet/login handles the OIDC token exchange and sets NUGET_AUTH_TOKEN.
+        # See: https://learn.microsoft.com/nuget/nuget-org/trusted-publishing#github-actions-setup
+        uses: NuGet/login@v1
 
       - name: Push to NuGet.org
         # --skip-duplicate prevents errors if a package with the same version
@@ -82,5 +70,5 @@ jobs:
         run: >
           dotnet nuget push "artifacts/*.nupkg"
           --source https://api.nuget.org/v3/index.json
-          --api-key "$NUGET_TOKEN"
+          --api-key "$NUGET_AUTH_TOKEN"
           --skip-duplicate
