@@ -1,0 +1,76 @@
+name: Publish NuGet
+
+on:
+  release:
+    types: [published]
+
+# contents: read is the minimum required to checkout the repo.
+# id_token: write is required for NuGet.org Trusted Publishing via OIDC.
+permissions:
+  contents: read
+  id_token: write
+
+jobs:
+  publish:
+    name: Pack & Publish to NuGet.org
+    runs-on: ubuntu-latest
+    # Route to the appropriate GitHub Environment so that NuGet.org Trusted
+    # Publishing can be scoped per environment and optional approval gates can
+    # be added later.  Pre-releases (e.g. alpha/beta/rc tags) go to the
+    # "prerelease" environment; all other published releases go to "release".
+    environment: ${{ github.event.release.prerelease && 'prerelease' || 'release' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Full history is required so that MinVer can walk the git graph and
+          # derive the correct package version from the nearest semver tag.
+          fetch-depth: 0
+
+      # Install all three SDK generations so that `dotnet pack` can build every
+      # TargetFramework listed in the .csproj files (net8.0, net9.0, net10.0).
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup .NET 10 (preview)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Restore
+        run: dotnet restore Aspeckd.sln
+
+      - name: Pack
+        # The test project has <IsPackable>false/> so only the two source
+        # projects (Aspeckd and Aspeckd.Core) will produce .nupkg files.
+        # MinVer reads the git tag checked out above and stamps the version.
+        run: >
+          dotnet pack Aspeckd.sln
+          --no-restore
+          --configuration Release
+          --output artifacts/
+
+      - name: Authenticate to NuGet.org (Trusted Publishing)
+        # NuGet/login handles the OIDC token exchange and sets NUGET_AUTH_TOKEN.
+        # See: https://learn.microsoft.com/nuget/nuget-org/trusted-publishing#github-actions-setup
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet.org
+        # --skip-duplicate prevents errors if a package with the same version
+        # was already uploaded (e.g. a re-run of a failed workflow).
+        run: >
+          dotnet nuget push "artifacts/*.nupkg"
+          --source https://api.nuget.org/v3/index.json
+          --api-key "$NUGET_AUTH_TOKEN"
+          --skip-duplicate
