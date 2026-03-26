@@ -8,41 +8,46 @@ on:
 
 jobs:
   build-and-test:
-    name: Build & Test
+    name: Build & Test (${{ matrix.tfm }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tfm: net8.0
+            dotnet-version: '8.0.x'
+            dotnet-quality: 'ga'
+          - tfm: net9.0
+            dotnet-version: '9.0.x'
+            dotnet-quality: 'ga'
+          - tfm: net10.0
+            dotnet-version: '10.0.x'
+            dotnet-quality: 'preview'
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Install all three SDKs so multi-targeted projects can compile for every TFM.
-      - name: Setup .NET 8
+      - name: Setup .NET ${{ matrix.dotnet-version }}
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
-
-      - name: Setup .NET 9
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'preview'
+          dotnet-version: ${{ matrix.dotnet-version }}
+          dotnet-quality: ${{ matrix.dotnet-quality }}
 
       - name: Restore
         run: dotnet restore Aspeckd.sln
 
       - name: Build
-        run: dotnet build Aspeckd.sln --no-restore --configuration Release
+        # Each matrix job builds only its target TFM so that each job is fully isolated.
+        run: dotnet build Aspeckd.sln --no-restore --configuration Release --framework ${{ matrix.tfm }}
 
       - name: Test
         run: >
           dotnet test Aspeckd.sln --no-build --configuration Release
+          --framework ${{ matrix.tfm }}
           --logger "trx;LogFileName=test-results.trx"
           --collect:"XPlat Code Coverage"
           --results-directory TestResults
@@ -59,12 +64,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
+          name: test-results-${{ matrix.tfm }}
           path: TestResults/**/*.trx
 
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-${{ matrix.tfm }}
           path: TestResults/CoverageReport/
