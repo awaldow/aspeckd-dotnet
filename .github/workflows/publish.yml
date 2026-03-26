@@ -6,9 +6,11 @@ on:
 
 # contents: read is the minimum required to checkout the repo.
 # id-token: write is required for NuGet.org Trusted Publishing via OIDC.
+# attestations: write is required for build provenance and SBOM attestations.
 permissions:
   contents: read
   id-token: write
+  attestations: write
 
 jobs:
   publish:
@@ -138,6 +140,31 @@ jobs:
           -p:PackageVersion=${{ env.PACKAGE_VERSION }}
           -p:MinVerVersionOverride=${{ env.PACKAGE_VERSION }}
           --output artifacts/
+
+      - name: Generate SBOM
+        # Generates a SPDX 2.2 SBOM for the packed NuGet artifacts.
+        # The manifest is written to artifacts/_manifest/spdx_2.2/manifest.spdx.json.
+        uses: microsoft/sbom-tool@v2
+        with:
+          BuildDropPath: artifacts/
+          PackageName: Aspeckd
+          PackageVersion: ${{ env.PACKAGE_VERSION }}
+          PackageSupplier: aspeckd contributors
+          ManifestDirPath: artifacts/
+
+      - name: Attest build provenance
+        # Creates a SLSA provenance attestation for every .nupkg and associates
+        # it with this workflow run via GitHub's attestation store.
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: artifacts/*.nupkg
+
+      - name: Attest SBOM
+        # Attaches the generated SPDX SBOM as an attestation for the .nupkg files.
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: artifacts/*.nupkg
+          sbom-path: artifacts/_manifest/spdx_2.2/manifest.spdx.json
 
       - name: Authenticate to NuGet.org (Trusted Publishing)
         # NuGet/login handles the OIDC token exchange and sets NUGET_AUTH_TOKEN.
