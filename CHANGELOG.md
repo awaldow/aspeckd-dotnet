@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.7](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.6...v0.1.7) (2026-03-26)
+
+
+### Features
+
+* add diagnostic steps for version inputs in publish workflow ([34d6ab8](https://github.com/awaldow/aspeckd-dotnet/commit/34d6ab8a05fb50134e71e50af4b86861d8445b8f))
+
+
+### Bug Fixes
+
+* add MinVerVersionOverride and version diagnostic step to publish workflow ([0945d5b](https://github.com/awaldow/aspeckd-dotnet/commit/0945d5bdad6501dc82be275e034ad1479f8fda62))
+
 ## [0.1.6](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.5...v0.1.6) (2026-03-26)
 
 
