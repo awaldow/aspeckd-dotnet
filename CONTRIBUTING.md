@@ -109,4 +109,16 @@ dotnet test --configuration Release
 
 ## Versioning and releases
 
-Versioning and the release workflow will be addressed in a future PR. For now, use the `<Version>` property in each `.csproj` to track the intended semver.
+This repo uses **[MinVer](https://github.com/adamralph/minver)** for automatic semantic versioning and **[release-please](https://github.com/googleapis/release-please)** to automate CHANGELOG maintenance and GitHub Releases.
+
+### How it works
+
+1. **Version inference** — MinVer derives the NuGet package version from the nearest git tag (e.g. `v1.2.3`). No manual `<Version>` property is needed in the `.csproj` files.
+2. **Conventional commits** — Commit messages on `main` must follow [Conventional Commits](https://www.conventionalcommits.org/). The prefix drives the next version bump:
+   - `fix:` → patch bump (1.2.3 → 1.2.4)
+   - `feat:` → minor bump (1.2.3 → 1.3.0)
+   - `feat!:` or `BREAKING CHANGE:` footer → major bump (1.2.3 → 2.0.0)
+3. **Release PR** — The `Release Please` GitHub Actions workflow watches `main`. When it detects conventional commits since the last release, it opens (or updates) a release PR that bumps the version in `.release-please-manifest.json` and updates `CHANGELOG.md`.
+4. **Tagging** — Merging the release PR causes release-please to create a git tag (e.g. `v1.3.0`) and a GitHub Release. MinVer picks up this tag on the next build.
+
+> **NuGet publishing** is not yet automated. A follow-up PR will wire up the publish step once a NuGet account is available.
