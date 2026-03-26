@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.1...v0.1.2) (2026-03-26)
+
+
+### Features
+
+* add package-specific README files and missing NuGet metadata ([aab9f08](https://github.com/awaldow/aspeckd-dotnet/commit/aab9f08892a7d8a7dc1dc1c25cccde28ac4b9509))
+
 ## [0.1.1](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.0...v0.1.1) (2026-03-26)
 
 
