@@ -53,14 +53,26 @@ jobs:
       - name: Restore
         run: dotnet restore Aspeckd.sln
 
+      - name: Derive package version from release tag
+        # Release tags are expected to be semver with an optional leading 'v'
+        # (e.g. v1.2.3 or 1.2.3-rc.1). Strip a leading 'v' so NuGet receives
+        # a valid package version.
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          VERSION="${TAG#v}"
+          echo "PACKAGE_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Using package version: $VERSION"
+
       - name: Pack
         # The test project has <IsPackable>false/> so only the two source
         # projects (Aspeckd and Aspeckd.Core) will produce .nupkg files.
-        # MinVer reads the git tag checked out above and stamps the version.
+        # Set PackageVersion explicitly from the published release tag to keep
+        # CI output deterministic even if MinVer cannot resolve git metadata.
         run: >
           dotnet pack Aspeckd.sln
           --no-restore
           --configuration Release
+          -p:PackageVersion=${{ env.PACKAGE_VERSION }}
           --output artifacts/
 
       - name: Authenticate to NuGet.org (Trusted Publishing)
