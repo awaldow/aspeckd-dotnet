@@ -17,9 +17,16 @@
       API metadata via IApiDescriptionGroupCollectionProvider. TFM-specific and
       Microsoft.OpenApi-version-specific logic lives here, keeping Aspeckd.Core evergreen.
     </Description>
-    <Authors>aspeckd contributors</Authors>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      MinVer infers the NuGet package version from the nearest git tag
+      (e.g. v1.2.3).  PrivateAssets="All" keeps it out of the published
+      dependency graph.
+    -->
+    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="All" />
+  </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

@@ -11,8 +11,15 @@
       IAgentSpecProvider interface. This package carries no ASP.NET Core or Microsoft.OpenApi
       dependency so it remains stable across TFM and library-version upgrades.
     </Description>
-    <Authors>aspeckd contributors</Authors>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      MinVer infers the NuGet package version from the nearest git tag
+      (e.g. v1.2.3).  PrivateAssets="All" keeps it out of the published
+      dependency graph.
+    -->
+    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="All" />
+  </ItemGroup>
 
 </Project>
