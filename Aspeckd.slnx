@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Aspeckd.Core/Aspeckd.Core.csproj" />
+    <Project Path="src/Aspeckd/Aspeckd.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Aspeckd.Tests/Aspeckd.Tests.csproj" />
+  </Folder>
+</Solution>

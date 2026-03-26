@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Aspeckd</RootNamespace>
+    <AssemblyName>Aspeckd.Core</AssemblyName>
+    <Description>
+      Core abstractions for Aspeckd: companion attributes, models, configuration, and the
+      IAgentSpecProvider interface. This package carries no ASP.NET Core or Microsoft.OpenApi
+      dependency so it remains stable across TFM and library-version upgrades.
+    </Description>
+    <Authors>aspeckd contributors</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+</Project>
