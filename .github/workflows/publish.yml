@@ -27,6 +27,10 @@ jobs:
           # Full history is required so that MinVer can walk the git graph and
           # derive the correct package version from the nearest semver tag.
           fetch-depth: 0
+          # fetch-tags is required alongside fetch-depth: 0 to ensure all tags
+          # are fetched; without it MinVer cannot see the release tag and falls
+          # back to the default 0.0.0-alpha.0.N version.
+          fetch-tags: true
 
       # Install all three SDK generations so that `dotnet pack` can build every
       # TargetFramework listed in the .csproj files (net8.0, net9.0, net10.0).
@@ -62,9 +66,10 @@ jobs:
       - name: Authenticate to NuGet.org (Trusted Publishing)
         # NuGet/login handles the OIDC token exchange and sets NUGET_AUTH_TOKEN.
         # See: https://learn.microsoft.com/nuget/nuget-org/trusted-publishing#github-actions-setup
+        # Do NOT pass a 'user' parameter here; doing so switches the action to
+        # username/password mode and NUGET_AUTH_TOKEN is not exported, causing
+        # the subsequent push to fail with 401 Unauthorized.
         uses: NuGet/login@v1
-        with:
-          user: ${{ secrets.NUGET_USER }}
 
       - name: Push to NuGet.org
         # --skip-duplicate prevents errors if a package with the same version
