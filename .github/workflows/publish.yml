@@ -63,15 +63,51 @@ jobs:
           echo "PACKAGE_VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Using package version: $VERSION"
 
+      - name: Validate derived package version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${PACKAGE_VERSION:-}"
+          if [[ -z "$VERSION" ]]; then
+            echo "::error::PACKAGE_VERSION is empty — cannot pack."
+            exit 1
+          fi
+          # Basic semver: 1.2.3, 1.2.3-rc.1, or 1.2.3+build.1
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::PACKAGE_VERSION '$VERSION' is not a valid semver-like version."
+            exit 1
+          fi
+          # Block MinVer fallback versions
+          if [[ "$VERSION" == "0.0.0" || "$VERSION" == 0.0.0-* ]]; then
+            echo "::error::Refusing to publish fallback version '$VERSION'."
+            exit 1
+          fi
+          echo "Validated PACKAGE_VERSION=$VERSION"
+
+      - name: Validate release/prerelease alignment
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${PACKAGE_VERSION}"
+          IS_PRERELEASE="${{ github.event.release.prerelease }}"
+          if [[ "$IS_PRERELEASE" == "true" && "$VERSION" != *-* ]]; then
+            echo "::error::GitHub release is marked pre-release but version '$VERSION' has no pre-release suffix."
+            exit 1
+          fi
+          if [[ "$IS_PRERELEASE" == "false" && "$VERSION" == *-* ]]; then
+            echo "::error::GitHub release is marked stable but version '$VERSION' contains a pre-release suffix."
+            exit 1
+          fi
+          echo "Release type and version suffix are aligned (prerelease=$IS_PRERELEASE, version=$VERSION)."
+
       - name: Pack
-        # The test project has <IsPackable>false/> so only the two source
-        # projects (Aspeckd and Aspeckd.Core) will produce .nupkg files.
-        # Set PackageVersion explicitly from the published release tag to keep
-        # CI output deterministic even if MinVer cannot resolve git metadata.
+        # Version and PackageVersion are forced from the release tag so MinVer's
+        # fallback (0.0.0-alpha.0.N) can never win.
         run: >
           dotnet pack Aspeckd.sln
           --no-restore
           --configuration Release
+          -p:Version=${{ env.PACKAGE_VERSION }}
           -p:PackageVersion=${{ env.PACKAGE_VERSION }}
           --output artifacts/
 
