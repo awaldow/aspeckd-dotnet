@@ -78,10 +78,10 @@ jobs:
       - name: Authenticate to NuGet.org (Trusted Publishing)
         # NuGet/login handles the OIDC token exchange and sets NUGET_AUTH_TOKEN.
         # See: https://learn.microsoft.com/nuget/nuget-org/trusted-publishing#github-actions-setup
-        # Do NOT pass a 'user' parameter here; doing so switches the action to
-        # username/password mode and NUGET_AUTH_TOKEN is not exported, causing
-        # the subsequent push to fail with 401 Unauthorized.
         uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
 
       - name: Push to NuGet.org
         # --skip-duplicate prevents errors if a package with the same version
@@ -89,5 +89,5 @@ jobs:
         run: >
           dotnet nuget push "artifacts/*.nupkg"
           --source https://api.nuget.org/v3/index.json
-          --api-key "$NUGET_AUTH_TOKEN"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
           --skip-duplicate
