@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.6](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.5...v0.1.6) (2026-03-26)
+
+
+### Bug Fixes
+
+* attempt 435 at getting the version to work in publish ([b2a6959](https://github.com/awaldow/aspeckd-dotnet/commit/b2a6959bb342cca612f5c4cd9f84e2cd314bdb60))
+* force Version/PackageVersion during pack and add pre-publish guards ([25e7cec](https://github.com/awaldow/aspeckd-dotnet/commit/25e7cecbaacc197a4d5ced5e6ed37eb3f6cbcf4c))
+
 ## [0.1.5](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.4...v0.1.5) (2026-03-26)
 
 
