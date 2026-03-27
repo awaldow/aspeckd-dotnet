@@ -76,4 +76,62 @@ public class AttributeTests
         Assert.True(usage.Inherited);
         Assert.False(usage.AllowMultiple);
     }
+
+    [Fact]
+    public void AgentToolGroupAttribute_StoresName()
+    {
+        var attr = new AgentToolGroupAttribute("Weather");
+        Assert.Equal("Weather", attr.Name);
+    }
+
+    [Fact]
+    public void AgentToolGroupAttribute_ThrowsOnNullOrWhitespaceName()
+    {
+        Assert.Throws<ArgumentException>(() => new AgentToolGroupAttribute(""));
+        Assert.Throws<ArgumentException>(() => new AgentToolGroupAttribute("   "));
+        Assert.Throws<ArgumentNullException>(() => new AgentToolGroupAttribute(null!));
+    }
+
+    [Fact]
+    public void AgentToolGroupAttribute_DescriptionDefaultsToNull()
+    {
+        var attr = new AgentToolGroupAttribute("Weather");
+        Assert.Null(attr.Description);
+    }
+
+    [Fact]
+    public void AgentToolGroupAttribute_StoresDescription()
+    {
+        var attr = new AgentToolGroupAttribute("Weather") { Description = "Weather-related endpoints" };
+        Assert.Equal("Weather-related endpoints", attr.Description);
+    }
+
+    [Fact]
+    public void AgentToolGroupAttribute_RequiredClaimsDefaultsToEmpty()
+    {
+        var attr = new AgentToolGroupAttribute("Weather");
+        Assert.Empty(attr.RequiredClaims);
+    }
+
+    [Fact]
+    public void AgentToolGroupAttribute_StoresRequiredClaims()
+    {
+        var attr = new AgentToolGroupAttribute("Weather")
+        {
+            RequiredClaims = new string[] { "weather:read", "weather:forecast" }
+        };
+        Assert.Equal(new string[] { "weather:read", "weather:forecast" }, attr.RequiredClaims);
+    }
+
+    [Fact]
+    public void AgentToolGroupAttribute_IsInherited()
+    {
+        var usage = typeof(AgentToolGroupAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        Assert.True(usage.Inherited);
+        Assert.False(usage.AllowMultiple);
+    }
 }
