@@ -6,9 +6,11 @@ on:
 
 # contents: read is the minimum required to checkout the repo.
 # id-token: write is required for NuGet.org Trusted Publishing via OIDC.
+# attestations: write is required for build provenance and SBOM attestations.
 permissions:
   contents: read
   id-token: write
+  attestations: write
 
 jobs:
   publish:
@@ -138,6 +140,52 @@ jobs:
           -p:PackageVersion=${{ env.PACKAGE_VERSION }}
           -p:MinVerVersionOverride=${{ env.PACKAGE_VERSION }}
           --output artifacts/
+
+      - name: Generate SBOM (Aspeckd)
+        # Generates a SPDX 2.2 SBOM scoped to the Aspeckd package.
+        # BuildComponentPath points at the project source so that only its
+        # direct dependencies are scanned.  The manifest lands in its own
+        # sub-directory to keep it separate from the Aspeckd.Core manifest.
+        uses: microsoft/sbom-tool@v2
+        with:
+          BuildDropPath: artifacts/
+          BuildComponentPath: src/Aspeckd
+          PackageName: Aspeckd
+          PackageVersion: ${{ env.PACKAGE_VERSION }}
+          PackageSupplier: aspeckd contributors
+          ManifestDirPath: artifacts/sbom-aspeckd/
+
+      - name: Generate SBOM (Aspeckd.Core)
+        # Generates a SPDX 2.2 SBOM scoped to the Aspeckd.Core package.
+        uses: microsoft/sbom-tool@v2
+        with:
+          BuildDropPath: artifacts/
+          BuildComponentPath: src/Aspeckd.Core
+          PackageName: Aspeckd.Core
+          PackageVersion: ${{ env.PACKAGE_VERSION }}
+          PackageSupplier: aspeckd contributors
+          ManifestDirPath: artifacts/sbom-aspeckd-core/
+
+      - name: Attest build provenance
+        # Creates a SLSA provenance attestation for every .nupkg and associates
+        # it with this workflow run via GitHub's attestation store.
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: artifacts/*.nupkg
+
+      - name: Attest SBOM (Aspeckd)
+        # Attaches the Aspeckd SPDX SBOM as an attestation scoped to its .nupkg.
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: artifacts/Aspeckd.${{ env.PACKAGE_VERSION }}.nupkg
+          sbom-path: artifacts/sbom-aspeckd/_manifest/spdx_2.2/manifest.spdx.json
+
+      - name: Attest SBOM (Aspeckd.Core)
+        # Attaches the Aspeckd.Core SPDX SBOM as an attestation scoped to its .nupkg.
+        uses: actions/attest-sbom@v2
+        with:
+          subject-path: artifacts/Aspeckd.Core.${{ env.PACKAGE_VERSION }}.nupkg
+          sbom-path: artifacts/sbom-aspeckd-core/_manifest/spdx_2.2/manifest.spdx.json
 
       - name: Authenticate to NuGet.org (Trusted Publishing)
         # NuGet/login handles the OIDC token exchange and sets NUGET_AUTH_TOKEN.
