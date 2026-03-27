@@ -17,4 +17,11 @@ public sealed class AgentSpecIndex
 
     /// <summary>All non-excluded endpoints, ordered by HTTP method then route.</summary>
     public IReadOnlyList<AgentEndpointSummary> Endpoints { get; init; } = [];
+
+    /// <summary>
+    /// Named tool groups declared via <see cref="Aspeckd.Attributes.AgentToolGroupAttribute"/>.
+    /// Each group aggregates related endpoints and may carry a description and required
+    /// authorization claims. Empty when no groups are defined.
+    /// </summary>
+    public IReadOnlyList<AgentToolGroup> Groups { get; init; } = [];
 }
