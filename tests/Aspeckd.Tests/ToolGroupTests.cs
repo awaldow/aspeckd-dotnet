@@ -20,7 +20,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_IncludesGroups()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         Assert.NotEmpty(index.Groups);
@@ -29,7 +29,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_GroupsContainWeatherGroup()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         var weather = index.Groups.FirstOrDefault(g => g.Name == "Weather");
@@ -39,7 +39,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_WeatherGroupHasCorrectDescription()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         var weather = index.Groups.First(g => g.Name == "Weather");
@@ -49,7 +49,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_WeatherGroupHasRequiredClaims()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         var weather = index.Groups.First(g => g.Name == "Weather");
@@ -59,7 +59,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_WeatherGroupContainsBothWeatherEndpoints()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         var weather = index.Groups.First(g => g.Name == "Weather");
@@ -70,7 +70,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_InventoryGroupHasNoRequiredClaims()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         var inventory = index.Groups.First(g => g.Name == "Inventory");
@@ -80,7 +80,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_InventoryGroupHasNullDescription()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         var inventory = index.Groups.First(g => g.Name == "Inventory");
@@ -94,7 +94,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_GroupedEndpointAppearsInGroupEndpointsList()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         // /api/weather should appear in the Weather group's Endpoints list.
@@ -105,7 +105,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_UngroupedEndpointDoesNotAppearInAnyGroup()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         // /api/ping has no AgentToolGroup attribute and must not appear inside any group.
@@ -119,7 +119,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     [Fact]
     public async Task GetIndex_FlatEndpointsListIsUnaffectedByGroups()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         Assert.Contains(index.Endpoints, e => e.Name == "GET /api/weather");
@@ -139,7 +139,7 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
         await using var factory = new TestWebAppFactory();
         var client = factory.CreateClient();
 
-        var index = await client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         Assert.Empty(index.Groups);

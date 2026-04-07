@@ -22,7 +22,7 @@ public class FallbackDisabledTests : IClassFixture<TestWebAppFactory>
     {
         // The /api/items endpoint in TestWebAppFactory has no AgentDescriptionAttribute.
         // Its description should be null even though it has Accepts<SampleRequest> metadata.
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         // No AgentName → auto-generated name is "POST /api/items".
@@ -34,7 +34,7 @@ public class FallbackDisabledTests : IClassFixture<TestWebAppFactory>
     [Fact]
     public async Task WhenFallbackDisabled_DefaultNameIsMethodPlusRoute()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         // /api/items uses .WithName("CreateItem") in the test app but has no AgentNameAttribute.

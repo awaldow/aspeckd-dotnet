@@ -4,6 +4,7 @@
   "httpMethod": "GET",
   "route": "/api/weather/forecast",
   "description": "Get weather forecast",
+  "requiredClaims": [],
   "consumesContentTypes": [],
   "responseTypes": {
     "200": []

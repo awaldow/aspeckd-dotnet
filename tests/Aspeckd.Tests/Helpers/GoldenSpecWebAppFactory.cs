@@ -70,13 +70,15 @@ public sealed class GoldenSpecWebAppFactory : WebApplicationFactory<GoldenSpecWe
                             () => Results.Ok("forecast"));
 
                         // -------------------------------------------------------
-                        // Orders group — GET/POST/DELETE, no claims, route params, request body
+                        // Orders group — GET/POST/DELETE, no claims on the group,
+                        // endpoint-level claims via AgentRequiredClaimsAttribute
                         // -------------------------------------------------------
                         endpoints.MapGet(
                             "/api/orders/{id}",
                             [AgentToolGroup("Orders", Description = "Order management operations")]
                             [AgentDescription("Get an order by its identifier")]
                             [AgentName("GetOrder")]
+                            [AgentRequiredClaims("orders:read")]
                             (string id) => Results.Ok(id));
 
                         endpoints.MapPost(
@@ -84,6 +86,7 @@ public sealed class GoldenSpecWebAppFactory : WebApplicationFactory<GoldenSpecWe
                             [AgentToolGroup("Orders", Description = "Order management operations")]
                             [AgentDescription("Create a new order")]
                             [AgentName("CreateOrder")]
+                            [AgentRequiredClaims("orders:write")]
                             () => Results.Created("/api/orders/1", null))
                             .Accepts<GoldenOrderRequest>("application/json");
 
@@ -92,6 +95,7 @@ public sealed class GoldenSpecWebAppFactory : WebApplicationFactory<GoldenSpecWe
                             [AgentToolGroup("Orders", Description = "Order management operations")]
                             [AgentDescription("Cancel an existing order")]
                             [AgentName("CancelOrder")]
+                            [AgentRequiredClaims("orders:write")]
                             (string id) => Results.NoContent());
 
                         // -------------------------------------------------------

@@ -4,6 +4,7 @@
   "httpMethod": "GET",
   "route": "/api/status",
   "description": "Returns the API health status",
+  "requiredClaims": [],
   "consumesContentTypes": [],
   "responseTypes": {
     "200": []

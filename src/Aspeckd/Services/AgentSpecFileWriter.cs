@@ -25,6 +25,17 @@ public static class AgentSpecFileWriter
     };
 
     /// <summary>
+    /// Extracts the stable endpoint identifier from a detail URL by returning the last
+    /// non-empty path segment (e.g. <c>/.well-known/agents/get-api-weather</c> → <c>get-api-weather</c>).
+    /// </summary>
+    public static string ExtractId(string detailUrl)
+    {
+        var trimmed = detailUrl.TrimEnd('/');
+        var slash = trimmed.LastIndexOf('/');
+        return slash >= 0 ? trimmed[(slash + 1)..] : trimmed;
+    }
+
+    /// <summary>
     /// Writes the full agent spec tree produced by <paramref name="provider"/> to
     /// <paramref name="outputDirectory"/>.  The directory is created when it does not exist.
     /// </summary>
@@ -59,13 +70,10 @@ public static class AgentSpecFileWriter
 
         // {id}.json — one file per endpoint.
         // The endpoint ID is the last path segment of the detailUrl
-        // (e.g. "/agents/get-api-weather" → "get-api-weather").
+        // (e.g. "/.well-known/agents/get-api-weather" → "get-api-weather").
         foreach (var endpoint in index.Endpoints)
         {
-            var id = endpoint.DetailUrl.TrimEnd('/');
-            var slash = id.LastIndexOf('/');
-            id = slash >= 0 ? id[(slash + 1)..] : id;
-
+            var id = ExtractId(endpoint.DetailUrl);
             if (string.IsNullOrEmpty(id))
                 continue;
 

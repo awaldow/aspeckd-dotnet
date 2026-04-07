@@ -77,7 +77,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
         var index = _runtimeProvider.GetIndex();
         foreach (var endpoint in index.Endpoints)
         {
-            var id = endpoint.DetailUrl.TrimEnd('/').Split('/').Last();
+            var id = AgentSpecFileWriter.ExtractId(endpoint.DetailUrl);
             var path = Path.Combine(_tempDir!, $"{id}.json");
             Assert.True(File.Exists(path), $"{id}.json should be written for each endpoint.");
         }
@@ -104,7 +104,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
     [Fact]
     public async Task Static_GetIndex_ReturnsOk()
     {
-        var response = await _staticClient!.GetAsync("/agents");
+        var response = await _staticClient!.GetAsync("/.well-known/agents");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
@@ -112,7 +112,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
     public async Task Static_GetIndex_MatchesRuntimeIndex()
     {
         var runtimeIndex = _runtimeProvider.GetIndex();
-        var staticIndex = await _staticClient!.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var staticIndex = await _staticClient!.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(staticIndex);
         Assert.Equal(runtimeIndex.Title, staticIndex.Title);
@@ -124,13 +124,13 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
     [Fact]
     public async Task Static_GetIndex_ContainsHelloEndpoint()
     {
-        var index = await _staticClient!.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _staticClient!.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         var hello = index.Endpoints.FirstOrDefault(e => e.Name == "Hello");
         Assert.NotNull(hello);
         Assert.Equal("Says hello", hello.Description);
-        Assert.StartsWith("/agents/", hello.DetailUrl);
+        Assert.StartsWith("/.well-known/agents/", hello.DetailUrl);
     }
 
     // -----------------------------------------------------------------------
@@ -140,7 +140,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
     [Fact]
     public async Task Static_GetEndpointDetail_ReturnsOkForKnownEndpoint()
     {
-        var index = await _staticClient!.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _staticClient!.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
         Assert.NotNull(index);
 
         var hello = index.Endpoints.First(e => e.Name == "Hello");
@@ -154,7 +154,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
         var runtimeDetail = _runtimeProvider.GetEndpointDetail("get-api-hello");
         Assert.NotNull(runtimeDetail);
 
-        var staticDetail = await _staticClient!.GetFromJsonAsync<AgentEndpointDetail>("/agents/get-api-hello");
+        var staticDetail = await _staticClient!.GetFromJsonAsync<AgentEndpointDetail>("/.well-known/agents/get-api-hello");
         Assert.NotNull(staticDetail);
 
         Assert.Equal(runtimeDetail.Id, staticDetail.Id);
@@ -167,7 +167,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
     [Fact]
     public async Task Static_GetEndpointDetail_ReturnsNotFoundForUnknownId()
     {
-        var response = await _staticClient!.GetAsync("/agents/does-not-exist-xyz");
+        var response = await _staticClient!.GetAsync("/.well-known/agents/does-not-exist-xyz");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
@@ -175,7 +175,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
     public async Task Static_GetEndpointDetail_RejectsPathTraversalId()
     {
         // An id with directory-traversal characters should be rejected (404), not leak files.
-        var response = await _staticClient!.GetAsync("/agents/..%2F..%2Fetc%2Fpasswd");
+        var response = await _staticClient!.GetAsync("/.well-known/agents/..%2F..%2Fetc%2Fpasswd");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
@@ -183,7 +183,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
     public async Task Static_GetEndpointDetail_RejectsIdWithUppercase()
     {
         // IDs are always lowercase; an uppercase id should not be found.
-        var response = await _staticClient!.GetAsync("/agents/GET-API-HELLO");
+        var response = await _staticClient!.GetAsync("/.well-known/agents/GET-API-HELLO");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
@@ -194,7 +194,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
     [Fact]
     public async Task Static_GetSchemas_ReturnsOk()
     {
-        var response = await _staticClient!.GetAsync("/agents/schemas");
+        var response = await _staticClient!.GetAsync("/.well-known/agents/schemas");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
@@ -202,7 +202,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
     public async Task Static_GetSchemas_MatchesRuntimeSchemas()
     {
         var runtimeSchemas = _runtimeProvider.GetSchemas();
-        var staticSchemas = await _staticClient!.GetFromJsonAsync<List<AgentSchemaInfo>>("/agents/schemas");
+        var staticSchemas = await _staticClient!.GetFromJsonAsync<List<AgentSchemaInfo>>("/.well-known/agents/schemas");
 
         Assert.NotNull(staticSchemas);
         Assert.Equal(runtimeSchemas.Count, staticSchemas.Count);

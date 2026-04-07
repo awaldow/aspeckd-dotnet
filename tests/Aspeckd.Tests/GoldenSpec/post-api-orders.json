@@ -4,6 +4,9 @@
   "httpMethod": "POST",
   "route": "/api/orders",
   "description": "Create a new order",
+  "requiredClaims": [
+    "orders:write"
+  ],
   "consumesContentTypes": [
     "application/json"
   ],

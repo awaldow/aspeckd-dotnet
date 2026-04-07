@@ -4,6 +4,9 @@
   "httpMethod": "DELETE",
   "route": "/api/orders/{id}",
   "description": "Cancel an existing order",
+  "requiredClaims": [
+    "orders:write"
+  ],
   "consumesContentTypes": [],
   "responseTypes": {
     "200": []

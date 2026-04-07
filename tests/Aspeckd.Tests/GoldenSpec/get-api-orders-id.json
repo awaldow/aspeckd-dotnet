@@ -4,6 +4,9 @@
   "httpMethod": "GET",
   "route": "/api/orders/{id}",
   "description": "Get an order by its identifier",
+  "requiredClaims": [
+    "orders:read"
+  ],
   "consumesContentTypes": [],
   "responseTypes": {
     "200": []

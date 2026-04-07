@@ -44,7 +44,7 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
             .Select(d => BuildIndexEntry(d, basePath))
             .ToList();
 
-        var groups = BuildGroups(descriptions, endpoints);
+        var groups = BuildGroups(descriptions, basePath);
 
         return new AgentSpecIndex
         {
@@ -213,31 +213,15 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
 
     /// <summary>
     /// Builds the list of <see cref="AgentToolGroup"/> objects from the visible endpoint
-    /// descriptions and their already-built index entries. Groups preserve the attribute's
+    /// descriptions. Groups preserve the attribute's
     /// <see cref="AgentToolGroupAttribute.Description"/> and
     /// <see cref="AgentToolGroupAttribute.RequiredClaims"/> from the first endpoint seen
     /// for that group name (an implicit "representative" endpoint).
     /// </summary>
-    private static IReadOnlyList<AgentToolGroup> BuildGroups(
+    private IReadOnlyList<AgentToolGroup> BuildGroups(
         IReadOnlyList<ApiDescription> descriptions,
-        IReadOnlyList<AgentIndexEntry> entries)
+        string basePath)
     {
-        // Build a lookup from endpoint id → (group attribute, index entry) for efficient access.
-        var groupAttrsByEndpointId = new Dictionary<string, AgentToolGroupAttribute>(StringComparer.Ordinal);
-        foreach (var d in descriptions)
-        {
-            var attr = d.ActionDescriptor?.EndpointMetadata
-                ?.OfType<AgentToolGroupAttribute>().FirstOrDefault();
-            if (attr is not null)
-                groupAttrsByEndpointId[BuildId(d)] = attr;
-        }
-
-        // Map each description to its index entry (same order guaranteed by parallel lists).
-        var descriptionToEntry = descriptions
-            .Zip(entries, (d, e) => (Id: BuildId(d), Entry: e))
-            .ToDictionary(x => x.Id, x => x.Entry, StringComparer.Ordinal);
-
-        // Group entries by group name, preserving the attribute metadata.
         var toolGroupsByName = new Dictionary<string, (AgentToolGroupAttribute Attr, List<AgentIndexEntry> Endpoints)>(
             StringComparer.Ordinal);
 
@@ -248,9 +232,7 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
             if (attr is null)
                 continue;
 
-            var id = BuildId(d);
-            if (!descriptionToEntry.TryGetValue(id, out var entry))
-                continue;
+            var entry = BuildIndexEntry(d, basePath);
 
             if (!toolGroupsByName.TryGetValue(attr.Name, out var groupEntry))
             {
@@ -308,6 +290,8 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
             HttpMethod = (description.HttpMethod ?? "GET").ToUpperInvariant(),
             Route = $"/{(description.RelativePath ?? string.Empty).TrimStart('/')}",
             Description = BuildDescription(description),
+            RequiredClaims = description.ActionDescriptor?.EndpointMetadata
+                ?.OfType<AgentRequiredClaimsAttribute>().FirstOrDefault()?.Claims ?? [],
             ConsumesContentTypes = consumesTypes,
             ResponseTypes = responseTypes,
             Parameters = parameters

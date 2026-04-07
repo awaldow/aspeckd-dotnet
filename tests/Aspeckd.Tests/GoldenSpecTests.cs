@@ -82,7 +82,7 @@ public class GoldenSpecTests : IClassFixture<GoldenSpecWebAppFactory>
         foreach (var endpoint in index.Endpoints)
         {
             // Derive the stable endpoint ID from the last segment of the detail URL.
-            var id = endpoint.DetailUrl.TrimEnd('/').Split('/').Last();
+            var id = AgentSpecFileWriter.ExtractId(endpoint.DetailUrl);
             var detail = _provider.GetEndpointDetail(id);
             Assert.NotNull(detail);
             var actual = Serialize(detail);

@@ -1,37 +1,37 @@
 {
   "title": "Golden Spec API",
   "description": "Comprehensive spec covering all Aspeckd features.",
-  "schemasUrl": "/agents/schemas",
+  "schemasUrl": "/.well-known/agents/schemas",
   "endpoints": [
     {
       "name": "CancelOrder",
       "description": "Cancel an existing order",
-      "detailUrl": "/agents/delete-api-orders-id"
+      "detailUrl": "/.well-known/agents/delete-api-orders-id"
     },
     {
       "name": "GetOrder",
       "description": "Get an order by its identifier",
-      "detailUrl": "/agents/get-api-orders-id"
+      "detailUrl": "/.well-known/agents/get-api-orders-id"
     },
     {
       "name": "GetStatus",
       "description": "Returns the API health status",
-      "detailUrl": "/agents/get-api-status"
+      "detailUrl": "/.well-known/agents/get-api-status"
     },
     {
       "name": "GetWeather",
       "description": "Get current weather",
-      "detailUrl": "/agents/get-api-weather"
+      "detailUrl": "/.well-known/agents/get-api-weather"
     },
     {
       "name": "GetWeatherForecast",
       "description": "Get weather forecast",
-      "detailUrl": "/agents/get-api-weather-forecast"
+      "detailUrl": "/.well-known/agents/get-api-weather-forecast"
     },
     {
       "name": "CreateOrder",
       "description": "Create a new order",
-      "detailUrl": "/agents/post-api-orders"
+      "detailUrl": "/.well-known/agents/post-api-orders"
     }
   ],
   "groups": [
@@ -43,17 +43,17 @@
         {
           "name": "CancelOrder",
           "description": "Cancel an existing order",
-          "detailUrl": "/agents/delete-api-orders-id"
+          "detailUrl": "/.well-known/agents/delete-api-orders-id"
         },
         {
           "name": "GetOrder",
           "description": "Get an order by its identifier",
-          "detailUrl": "/agents/get-api-orders-id"
+          "detailUrl": "/.well-known/agents/get-api-orders-id"
         },
         {
           "name": "CreateOrder",
           "description": "Create a new order",
-          "detailUrl": "/agents/post-api-orders"
+          "detailUrl": "/.well-known/agents/post-api-orders"
         }
       ]
     },
@@ -67,12 +67,12 @@
         {
           "name": "GetWeather",
           "description": "Get current weather",
-          "detailUrl": "/agents/get-api-weather"
+          "detailUrl": "/.well-known/agents/get-api-weather"
         },
         {
           "name": "GetWeatherForecast",
           "description": "Get weather forecast",
-          "detailUrl": "/agents/get-api-weather-forecast"
+          "detailUrl": "/.well-known/agents/get-api-weather-forecast"
         }
       ]
     }

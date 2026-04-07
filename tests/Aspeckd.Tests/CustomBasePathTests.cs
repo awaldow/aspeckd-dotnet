@@ -58,7 +58,7 @@ public class CustomBasePathTests
         await using var factory = new TestWebAppFactory { AgentsBasePath = "/ai" };
         var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/agents");
+        var response = await client.GetAsync("/.well-known/agents");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

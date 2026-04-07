@@ -58,7 +58,7 @@ public class AgentSpecFileWriterTests : IDisposable
         foreach (var ep in provider.GetIndex().Endpoints)
         {
             // Derive the file name from the last segment of the detailUrl.
-            var id = ep.DetailUrl.TrimEnd('/').Split('/').Last();
+            var id = AgentSpecFileWriter.ExtractId(ep.DetailUrl);
             Assert.True(
                 File.Exists(Path.Combine(_tempDir, $"{id}.json")),
                 $"Expected detail file for endpoint '{id}'.");
