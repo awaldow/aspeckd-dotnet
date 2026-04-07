@@ -4,58 +4,34 @@
   "schemasUrl": "/agents/schemas",
   "endpoints": [
     {
-      "id": "delete-api-orders-id",
       "name": "CancelOrder",
-      "httpMethod": "DELETE",
-      "route": "/api/orders/{id}",
       "description": "Cancel an existing order",
-      "detailUrl": "/agents/delete-api-orders-id",
-      "group": "Orders"
+      "detailUrl": "/agents/delete-api-orders-id"
     },
     {
-      "id": "get-api-orders-id",
       "name": "GetOrder",
-      "httpMethod": "GET",
-      "route": "/api/orders/{id}",
       "description": "Get an order by its identifier",
-      "detailUrl": "/agents/get-api-orders-id",
-      "group": "Orders"
+      "detailUrl": "/agents/get-api-orders-id"
     },
     {
-      "id": "get-api-status",
       "name": "GetStatus",
-      "httpMethod": "GET",
-      "route": "/api/status",
       "description": "Returns the API health status",
-      "detailUrl": "/agents/get-api-status",
-      "group": null
+      "detailUrl": "/agents/get-api-status"
     },
     {
-      "id": "get-api-weather",
       "name": "GetWeather",
-      "httpMethod": "GET",
-      "route": "/api/weather",
       "description": "Get current weather",
-      "detailUrl": "/agents/get-api-weather",
-      "group": "Weather"
+      "detailUrl": "/agents/get-api-weather"
     },
     {
-      "id": "get-api-weather-forecast",
       "name": "GetWeatherForecast",
-      "httpMethod": "GET",
-      "route": "/api/weather/forecast",
       "description": "Get weather forecast",
-      "detailUrl": "/agents/get-api-weather-forecast",
-      "group": "Weather"
+      "detailUrl": "/agents/get-api-weather-forecast"
     },
     {
-      "id": "post-api-orders",
       "name": "CreateOrder",
-      "httpMethod": "POST",
-      "route": "/api/orders",
       "description": "Create a new order",
-      "detailUrl": "/agents/post-api-orders",
-      "group": "Orders"
+      "detailUrl": "/agents/post-api-orders"
     }
   ],
   "groups": [
@@ -65,31 +41,19 @@
       "requiredClaims": [],
       "endpoints": [
         {
-          "id": "delete-api-orders-id",
           "name": "CancelOrder",
-          "httpMethod": "DELETE",
-          "route": "/api/orders/{id}",
           "description": "Cancel an existing order",
-          "detailUrl": "/agents/delete-api-orders-id",
-          "group": "Orders"
+          "detailUrl": "/agents/delete-api-orders-id"
         },
         {
-          "id": "get-api-orders-id",
           "name": "GetOrder",
-          "httpMethod": "GET",
-          "route": "/api/orders/{id}",
           "description": "Get an order by its identifier",
-          "detailUrl": "/agents/get-api-orders-id",
-          "group": "Orders"
+          "detailUrl": "/agents/get-api-orders-id"
         },
         {
-          "id": "post-api-orders",
           "name": "CreateOrder",
-          "httpMethod": "POST",
-          "route": "/api/orders",
           "description": "Create a new order",
-          "detailUrl": "/agents/post-api-orders",
-          "group": "Orders"
+          "detailUrl": "/agents/post-api-orders"
         }
       ]
     },
@@ -101,22 +65,14 @@
       ],
       "endpoints": [
         {
-          "id": "get-api-weather",
           "name": "GetWeather",
-          "httpMethod": "GET",
-          "route": "/api/weather",
           "description": "Get current weather",
-          "detailUrl": "/agents/get-api-weather",
-          "group": "Weather"
+          "detailUrl": "/agents/get-api-weather"
         },
         {
-          "id": "get-api-weather-forecast",
           "name": "GetWeatherForecast",
-          "httpMethod": "GET",
-          "route": "/api/weather/forecast",
           "description": "Get weather forecast",
-          "detailUrl": "/agents/get-api-weather-forecast",
-          "group": "Weather"
+          "detailUrl": "/agents/get-api-weather-forecast"
         }
       ]
     }

@@ -77,8 +77,9 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
         var index = _runtimeProvider.GetIndex();
         foreach (var endpoint in index.Endpoints)
         {
-            var path = Path.Combine(_tempDir!, $"{endpoint.Id}.json");
-            Assert.True(File.Exists(path), $"{endpoint.Id}.json should be written for each endpoint.");
+            var id = endpoint.DetailUrl.TrimEnd('/').Split('/').Last();
+            var path = Path.Combine(_tempDir!, $"{id}.json");
+            Assert.True(File.Exists(path), $"{id}.json should be written for each endpoint.");
         }
     }
 
@@ -126,11 +127,10 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
         var index = await _staticClient!.GetFromJsonAsync<AgentSpecIndex>("/agents");
 
         Assert.NotNull(index);
-        var hello = index.Endpoints.FirstOrDefault(e => e.Route == "/api/hello");
+        var hello = index.Endpoints.FirstOrDefault(e => e.Name == "Hello");
         Assert.NotNull(hello);
-        Assert.Equal("Hello", hello.Name);
         Assert.Equal("Says hello", hello.Description);
-        Assert.Equal("GET", hello.HttpMethod);
+        Assert.StartsWith("/agents/", hello.DetailUrl);
     }
 
     // -----------------------------------------------------------------------
@@ -143,7 +143,7 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
         var index = await _staticClient!.GetFromJsonAsync<AgentSpecIndex>("/agents");
         Assert.NotNull(index);
 
-        var hello = index.Endpoints.First(e => e.Route == "/api/hello");
+        var hello = index.Endpoints.First(e => e.Name == "Hello");
         var response = await _staticClient!.GetAsync(hello.DetailUrl);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }

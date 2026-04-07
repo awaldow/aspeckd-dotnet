@@ -57,13 +57,22 @@ public static class AgentSpecFileWriter
         var schemas = provider.GetSchemas();
         await WriteJsonFileAsync(Path.Combine(outputDirectory, "schemas.json"), schemas, options, cancellationToken);
 
-        // {id}.json — one file per endpoint
+        // {id}.json — one file per endpoint.
+        // The endpoint ID is the last path segment of the detailUrl
+        // (e.g. "/agents/get-api-weather" → "get-api-weather").
         foreach (var endpoint in index.Endpoints)
         {
-            var detail = provider.GetEndpointDetail(endpoint.Id);
+            var id = endpoint.DetailUrl.TrimEnd('/');
+            var slash = id.LastIndexOf('/');
+            id = slash >= 0 ? id[(slash + 1)..] : id;
+
+            if (string.IsNullOrEmpty(id))
+                continue;
+
+            var detail = provider.GetEndpointDetail(id);
             if (detail is not null)
             {
-                var filePath = Path.Combine(outputDirectory, $"{endpoint.Id}.json");
+                var filePath = Path.Combine(outputDirectory, $"{id}.json");
                 await WriteJsonFileAsync(filePath, detail, options, cancellationToken);
             }
         }

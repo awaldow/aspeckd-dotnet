@@ -57,9 +57,11 @@ public class AgentSpecFileWriterTests : IDisposable
 
         foreach (var ep in provider.GetIndex().Endpoints)
         {
+            // Derive the file name from the last segment of the detailUrl.
+            var id = ep.DetailUrl.TrimEnd('/').Split('/').Last();
             Assert.True(
-                File.Exists(Path.Combine(_tempDir, $"{ep.Id}.json")),
-                $"Expected detail file for endpoint '{ep.Id}'.");
+                File.Exists(Path.Combine(_tempDir, $"{id}.json")),
+                $"Expected detail file for endpoint '{id}'.");
         }
     }
 
@@ -158,12 +160,9 @@ public class AgentSpecFileWriterTests : IDisposable
             SchemasUrl = "/agents/schemas",
             Endpoints =
             [
-                new AgentEndpointSummary
+                new AgentIndexEntry
                 {
-                    Id = "get-stub",
                     Name = "GetStub",
-                    HttpMethod = "GET",
-                    Route = "/stub",
                     Description = "A stub endpoint.",
                     DetailUrl = "/agents/get-stub"
                 }

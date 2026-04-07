@@ -35,12 +35,13 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
     public AgentSpecIndex GetIndex()
     {
         var basePath = NormalizeBasePath(_options.BasePath);
-        var descriptions = GetVisibleDescriptions().ToList();
+        var descriptions = GetVisibleDescriptions()
+            .OrderBy(d => d.HttpMethod ?? string.Empty, StringComparer.Ordinal)
+            .ThenBy(d => d.RelativePath ?? string.Empty, StringComparer.Ordinal)
+            .ToList();
 
         var endpoints = descriptions
-            .Select(d => BuildSummary(d, basePath))
-            .OrderBy(e => e.HttpMethod)
-            .ThenBy(e => e.Route)
+            .Select(d => BuildIndexEntry(d, basePath))
             .ToList();
 
         var groups = BuildGroups(descriptions, endpoints);
@@ -198,67 +199,66 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
         return null;
     }
 
-    private AgentEndpointSummary BuildSummary(ApiDescription description, string basePath)
+    private AgentIndexEntry BuildIndexEntry(ApiDescription description, string basePath)
     {
         var id = BuildId(description);
-        var groupAttr = description.ActionDescriptor?.EndpointMetadata
-            ?.OfType<AgentToolGroupAttribute>().FirstOrDefault();
 
-        return new AgentEndpointSummary
+        return new AgentIndexEntry
         {
-            Id = id,
             Name = BuildName(description),
-            HttpMethod = (description.HttpMethod ?? "GET").ToUpperInvariant(),
-            Route = $"/{(description.RelativePath ?? string.Empty).TrimStart('/')}",
             Description = BuildDescription(description),
-            DetailUrl = $"{basePath}/{id}",
-            Group = groupAttr?.Name
+            DetailUrl = $"{basePath}/{id}"
         };
     }
 
     /// <summary>
     /// Builds the list of <see cref="AgentToolGroup"/> objects from the visible endpoint
-    /// descriptions and their already-built summaries. Groups preserve the attribute's
+    /// descriptions and their already-built index entries. Groups preserve the attribute's
     /// <see cref="AgentToolGroupAttribute.Description"/> and
     /// <see cref="AgentToolGroupAttribute.RequiredClaims"/> from the first endpoint seen
     /// for that group name (an implicit "representative" endpoint).
     /// </summary>
     private static IReadOnlyList<AgentToolGroup> BuildGroups(
         IReadOnlyList<ApiDescription> descriptions,
-        IReadOnlyList<AgentEndpointSummary> summaries)
+        IReadOnlyList<AgentIndexEntry> entries)
     {
-        // Build a lookup from endpoint id → group attribute for efficient access.
+        // Build a lookup from endpoint id → (group attribute, index entry) for efficient access.
         var groupAttrsByEndpointId = new Dictionary<string, AgentToolGroupAttribute>(StringComparer.Ordinal);
         foreach (var d in descriptions)
         {
             var attr = d.ActionDescriptor?.EndpointMetadata
                 ?.OfType<AgentToolGroupAttribute>().FirstOrDefault();
             if (attr is not null)
-            {
-                var id = BuildId(d);
-                groupAttrsByEndpointId[id] = attr;
-            }
+                groupAttrsByEndpointId[BuildId(d)] = attr;
         }
 
-        // Group summaries by group name, preserving the attribute metadata.
-        var toolGroupsByName = new Dictionary<string, (AgentToolGroupAttribute Attr, List<AgentEndpointSummary> Endpoints)>(
+        // Map each description to its index entry (same order guaranteed by parallel lists).
+        var descriptionToEntry = descriptions
+            .Zip(entries, (d, e) => (Id: BuildId(d), Entry: e))
+            .ToDictionary(x => x.Id, x => x.Entry, StringComparer.Ordinal);
+
+        // Group entries by group name, preserving the attribute metadata.
+        var toolGroupsByName = new Dictionary<string, (AgentToolGroupAttribute Attr, List<AgentIndexEntry> Endpoints)>(
             StringComparer.Ordinal);
 
-        foreach (var summary in summaries)
+        foreach (var d in descriptions)
         {
-            if (summary.Group is null)
+            var attr = d.ActionDescriptor?.EndpointMetadata
+                ?.OfType<AgentToolGroupAttribute>().FirstOrDefault();
+            if (attr is null)
                 continue;
 
-            if (!groupAttrsByEndpointId.TryGetValue(summary.Id, out var attr))
+            var id = BuildId(d);
+            if (!descriptionToEntry.TryGetValue(id, out var entry))
                 continue;
 
-            if (!toolGroupsByName.TryGetValue(summary.Group, out var entry))
+            if (!toolGroupsByName.TryGetValue(attr.Name, out var groupEntry))
             {
-                entry = (attr, []);
-                toolGroupsByName[summary.Group] = entry;
+                groupEntry = (attr, []);
+                toolGroupsByName[attr.Name] = groupEntry;
             }
 
-            entry.Endpoints.Add(summary);
+            groupEntry.Endpoints.Add(entry);
         }
 
         return toolGroupsByName

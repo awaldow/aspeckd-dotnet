@@ -63,8 +63,8 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
 
         Assert.NotNull(index);
         var weather = index.Groups.First(g => g.Name == "Weather");
-        Assert.Contains(weather.Endpoints, e => e.Route == "/api/weather");
-        Assert.Contains(weather.Endpoints, e => e.Route == "/api/weather/forecast");
+        Assert.Contains(weather.Endpoints, e => e.DetailUrl.Contains("get-api-weather") && !e.DetailUrl.Contains("forecast"));
+        Assert.Contains(weather.Endpoints, e => e.DetailUrl.Contains("get-api-weather-forecast"));
     }
 
     [Fact]
@@ -88,29 +88,28 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
     }
 
     // -----------------------------------------------------------------------
-    // Endpoint summaries carry the group name
+    // Endpoint group membership is reflected in the groups list
     // -----------------------------------------------------------------------
 
     [Fact]
-    public async Task GetIndex_GroupedEndpointSummaryCarriesGroupName()
+    public async Task GetIndex_GroupedEndpointAppearsInGroupEndpointsList()
     {
         var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
 
         Assert.NotNull(index);
-        var weatherEndpoint = index.Endpoints.FirstOrDefault(e => e.Route == "/api/weather");
-        Assert.NotNull(weatherEndpoint);
-        Assert.Equal("Weather", weatherEndpoint.Group);
+        // /api/weather should appear in the Weather group's Endpoints list.
+        var weather = index.Groups.First(g => g.Name == "Weather");
+        Assert.Contains(weather.Endpoints, e => e.DetailUrl.Contains("get-api-weather") && !e.DetailUrl.Contains("forecast"));
     }
 
     [Fact]
-    public async Task GetIndex_UngroupedEndpointSummaryHasNullGroup()
+    public async Task GetIndex_UngroupedEndpointDoesNotAppearInAnyGroup()
     {
         var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
 
         Assert.NotNull(index);
-        var ping = index.Endpoints.FirstOrDefault(e => e.Route == "/api/ping");
-        Assert.NotNull(ping);
-        Assert.Null(ping.Group);
+        // /api/ping has no AgentToolGroup attribute and must not appear inside any group.
+        Assert.All(index.Groups, g => Assert.DoesNotContain(g.Endpoints, e => e.Name == "GET /api/ping"));
     }
 
     // -----------------------------------------------------------------------
@@ -123,10 +122,10 @@ public class ToolGroupTests : IClassFixture<ToolGroupTestWebAppFactory>
         var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
 
         Assert.NotNull(index);
-        Assert.Contains(index.Endpoints, e => e.Route == "/api/weather");
-        Assert.Contains(index.Endpoints, e => e.Route == "/api/weather/forecast");
-        Assert.Contains(index.Endpoints, e => e.Route == "/api/items");
-        Assert.Contains(index.Endpoints, e => e.Route == "/api/ping");
+        Assert.Contains(index.Endpoints, e => e.Name == "GET /api/weather");
+        Assert.Contains(index.Endpoints, e => e.DetailUrl.EndsWith("get-api-weather-forecast"));
+        Assert.Contains(index.Endpoints, e => e.Name == "GET /api/items");
+        Assert.Contains(index.Endpoints, e => e.Name == "GET /api/ping");
     }
 
     // -----------------------------------------------------------------------

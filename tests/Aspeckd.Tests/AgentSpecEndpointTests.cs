@@ -50,11 +50,10 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
         var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
 
         Assert.NotNull(index);
-        var hello = index.Endpoints.FirstOrDefault(e => e.Route == "/api/hello");
+        var hello = index.Endpoints.FirstOrDefault(e => e.Name == "Hello");
         Assert.NotNull(hello);
-        Assert.Equal("Hello", hello.Name);
         Assert.Equal("Says hello", hello.Description);
-        Assert.Equal("GET", hello.HttpMethod);
+        Assert.StartsWith("/agents/", hello.DetailUrl);
     }
 
     [Fact]
@@ -63,7 +62,9 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
         var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
 
         Assert.NotNull(index);
-        Assert.DoesNotContain(index.Endpoints, e => e.Route == "/api/hidden");
+        // The hidden endpoint has no AgentNameAttribute so its auto-generated name is
+        // "GET /api/hidden". It must not appear in the index at all.
+        Assert.DoesNotContain(index.Endpoints, e => e.Name == "GET /api/hidden");
     }
 
     [Fact]
@@ -72,7 +73,8 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
         var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
 
         Assert.NotNull(index);
-        Assert.Contains(index.Endpoints, e => e.Route == "/api/items" && e.HttpMethod == "POST");
+        // No AgentNameAttribute on this endpoint → auto-generated name is "POST /api/items".
+        Assert.Contains(index.Endpoints, e => e.Name == "POST /api/items");
     }
 
     [Fact]
@@ -81,10 +83,9 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
         var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
 
         Assert.NotNull(index);
-        var hello = index.Endpoints.First(e => e.Route == "/api/hello");
+        var hello = index.Endpoints.First(e => e.Name == "Hello");
         Assert.StartsWith("/agents/", hello.DetailUrl);
-        Assert.NotEmpty(hello.Id);
-        Assert.Equal($"/agents/{hello.Id}", hello.DetailUrl);
+        Assert.NotEmpty(hello.DetailUrl.TrimStart('/').Split('/').Last());
     }
 
     // -----------------------------------------------------------------------
@@ -97,7 +98,7 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
         var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
         Assert.NotNull(index);
 
-        var hello = index.Endpoints.First(e => e.Route == "/api/hello");
+        var hello = index.Endpoints.First(e => e.Name == "Hello");
         var response = await _client.GetAsync(hello.DetailUrl);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -108,11 +109,10 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
         var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
         Assert.NotNull(index);
 
-        var hello = index.Endpoints.First(e => e.Route == "/api/hello");
+        var hello = index.Endpoints.First(e => e.Name == "Hello");
         var detail = await _client.GetFromJsonAsync<AgentEndpointDetail>(hello.DetailUrl);
 
         Assert.NotNull(detail);
-        Assert.Equal(hello.Id, detail.Id);
         Assert.Equal("Hello", detail.Name);
         Assert.Equal("Says hello", detail.Description);
         Assert.Equal("GET", detail.HttpMethod);

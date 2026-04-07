@@ -15,8 +15,12 @@ public sealed class AgentSpecIndex
     /// <summary>Relative URL to the schemas endpoint (e.g. <c>/agents/schemas</c>).</summary>
     public string SchemasUrl { get; init; } = string.Empty;
 
-    /// <summary>All non-excluded endpoints, ordered by HTTP method then route.</summary>
-    public IReadOnlyList<AgentEndpointSummary> Endpoints { get; init; } = [];
+    /// <summary>
+    /// Lean index entries for all non-excluded endpoints, ordered by HTTP method then route.
+    /// Each entry carries only the name, description, and a <c>detailUrl</c> to the full
+    /// endpoint document.
+    /// </summary>
+    public IReadOnlyList<AgentIndexEntry> Endpoints { get; init; } = [];
 
     /// <summary>
     /// Named tool groups declared via <see cref="Aspeckd.Attributes.AgentToolGroupAttribute"/>.
