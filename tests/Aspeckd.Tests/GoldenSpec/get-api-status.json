@@ -1,0 +1,12 @@
+{
+  "id": "get-api-status",
+  "name": "GetStatus",
+  "httpMethod": "GET",
+  "route": "/api/status",
+  "description": "Returns the API health status",
+  "consumesContentTypes": [],
+  "responseTypes": {
+    "200": []
+  },
+  "parameters": []
+}

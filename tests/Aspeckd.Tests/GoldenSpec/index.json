@@ -1,26 +1,124 @@
 {
-  "title": "Test API",
-  "description": "Integration test API",
+  "title": "Golden Spec API",
+  "description": "Comprehensive spec covering all Aspeckd features.",
   "schemasUrl": "/agents/schemas",
   "endpoints": [
     {
-      "id": "get-api-hello",
-      "name": "Hello",
+      "id": "delete-api-orders-id",
+      "name": "CancelOrder",
+      "httpMethod": "DELETE",
+      "route": "/api/orders/{id}",
+      "description": "Cancel an existing order",
+      "detailUrl": "/agents/delete-api-orders-id",
+      "group": "Orders"
+    },
+    {
+      "id": "get-api-orders-id",
+      "name": "GetOrder",
       "httpMethod": "GET",
-      "route": "/api/hello",
-      "description": "Says hello",
-      "detailUrl": "/agents/get-api-hello",
+      "route": "/api/orders/{id}",
+      "description": "Get an order by its identifier",
+      "detailUrl": "/agents/get-api-orders-id",
+      "group": "Orders"
+    },
+    {
+      "id": "get-api-status",
+      "name": "GetStatus",
+      "httpMethod": "GET",
+      "route": "/api/status",
+      "description": "Returns the API health status",
+      "detailUrl": "/agents/get-api-status",
       "group": null
     },
     {
-      "id": "post-api-items",
-      "name": "POST /api/items",
+      "id": "get-api-weather",
+      "name": "GetWeather",
+      "httpMethod": "GET",
+      "route": "/api/weather",
+      "description": "Get current weather",
+      "detailUrl": "/agents/get-api-weather",
+      "group": "Weather"
+    },
+    {
+      "id": "get-api-weather-forecast",
+      "name": "GetWeatherForecast",
+      "httpMethod": "GET",
+      "route": "/api/weather/forecast",
+      "description": "Get weather forecast",
+      "detailUrl": "/agents/get-api-weather-forecast",
+      "group": "Weather"
+    },
+    {
+      "id": "post-api-orders",
+      "name": "CreateOrder",
       "httpMethod": "POST",
-      "route": "/api/items",
-      "description": null,
-      "detailUrl": "/agents/post-api-items",
-      "group": null
+      "route": "/api/orders",
+      "description": "Create a new order",
+      "detailUrl": "/agents/post-api-orders",
+      "group": "Orders"
     }
   ],
-  "groups": []
+  "groups": [
+    {
+      "name": "Orders",
+      "description": "Order management operations",
+      "requiredClaims": [],
+      "endpoints": [
+        {
+          "id": "delete-api-orders-id",
+          "name": "CancelOrder",
+          "httpMethod": "DELETE",
+          "route": "/api/orders/{id}",
+          "description": "Cancel an existing order",
+          "detailUrl": "/agents/delete-api-orders-id",
+          "group": "Orders"
+        },
+        {
+          "id": "get-api-orders-id",
+          "name": "GetOrder",
+          "httpMethod": "GET",
+          "route": "/api/orders/{id}",
+          "description": "Get an order by its identifier",
+          "detailUrl": "/agents/get-api-orders-id",
+          "group": "Orders"
+        },
+        {
+          "id": "post-api-orders",
+          "name": "CreateOrder",
+          "httpMethod": "POST",
+          "route": "/api/orders",
+          "description": "Create a new order",
+          "detailUrl": "/agents/post-api-orders",
+          "group": "Orders"
+        }
+      ]
+    },
+    {
+      "name": "Weather",
+      "description": "Weather-related operations",
+      "requiredClaims": [
+        "weather:read"
+      ],
+      "endpoints": [
+        {
+          "id": "get-api-weather",
+          "name": "GetWeather",
+          "httpMethod": "GET",
+          "route": "/api/weather",
+          "description": "Get current weather",
+          "detailUrl": "/agents/get-api-weather",
+          "group": "Weather"
+        },
+        {
+          "id": "get-api-weather-forecast",
+          "name": "GetWeatherForecast",
+          "httpMethod": "GET",
+          "route": "/api/weather/forecast",
+          "description": "Get weather forecast",
+          "detailUrl": "/agents/get-api-weather-forecast",
+          "group": "Weather"
+        }
+      ]
+    }
+  ]
 }

@@ -24,7 +24,7 @@ namespace Aspeckd.Tests;
 /// </code>
 /// </para>
 /// </remarks>
-public class GoldenSpecTests : IClassFixture<TestWebAppFactory>
+public class GoldenSpecTests : IClassFixture<GoldenSpecWebAppFactory>
 {
     private static readonly string GoldenDir =
         Path.Combine(AppContext.BaseDirectory, "GoldenSpec");
@@ -43,7 +43,7 @@ public class GoldenSpecTests : IClassFixture<TestWebAppFactory>
 
     private readonly IAgentSpecProvider _provider;
 
-    public GoldenSpecTests(TestWebAppFactory factory)
+    public GoldenSpecTests(GoldenSpecWebAppFactory factory)
     {
         _provider = factory.Services.GetRequiredService<IAgentSpecProvider>();
     }

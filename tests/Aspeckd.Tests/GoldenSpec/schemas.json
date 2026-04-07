@@ -1,6 +1,10 @@
 [
   {
-    "name": "SampleRequest",
+    "name": "GoldenOrderRequest",
+    "jsonSchema": null
+  },
+  {
+    "name": "String",
     "jsonSchema": null
   }
 ]

@@ -1,0 +1,19 @@
+{
+  "id": "get-api-orders-id",
+  "name": "GetOrder",
+  "httpMethod": "GET",
+  "route": "/api/orders/{id}",
+  "description": "Get an order by its identifier",
+  "consumesContentTypes": [],
+  "responseTypes": {
+    "200": []
+  },
+  "parameters": [
+    {
+      "name": "id",
+      "source": "Path",
+      "type": "String",
+      "isRequired": true
+    }
+  ]
+}
