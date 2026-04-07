@@ -1,0 +1,21 @@
+{
+  "id": "post-api-items",
+  "name": "POST /api/items",
+  "httpMethod": "POST",
+  "route": "/api/items",
+  "description": null,
+  "consumesContentTypes": [
+    "application/json"
+  ],
+  "responseTypes": {
+    "200": []
+  },
+  "parameters": [
+    {
+      "name": "SampleRequest",
+      "source": "Body",
+      "type": "SampleRequest",
+      "isRequired": true
+    }
+  ]
+}

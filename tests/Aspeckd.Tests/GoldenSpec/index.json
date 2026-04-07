@@ -1,0 +1,26 @@
+{
+  "title": "Test API",
+  "description": "Integration test API",
+  "schemasUrl": "/agents/schemas",
+  "endpoints": [
+    {
+      "id": "get-api-hello",
+      "name": "Hello",
+      "httpMethod": "GET",
+      "route": "/api/hello",
+      "description": "Says hello",
+      "detailUrl": "/agents/get-api-hello",
+      "group": null
+    },
+    {
+      "id": "post-api-items",
+      "name": "POST /api/items",
+      "httpMethod": "POST",
+      "route": "/api/items",
+      "description": null,
+      "detailUrl": "/agents/post-api-items",
+      "group": null
+    }
+  ],
+  "groups": []
+}

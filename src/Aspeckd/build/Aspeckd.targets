@@ -1,0 +1,107 @@
+<Project>
+  <!--
+    Aspeckd build-time targets.
+
+    Provides optional build / publish-time generation of the /agents/* doc tree as a
+    directory of static JSON files.  The files can then be committed to source control,
+    shipped inside a publish artifact, or served directly from static-file middleware
+    instead of being generated on every request.
+
+    USAGE — automatic generation after publish
+    ==========================================
+    In your application's .csproj (or a Directory.Build.props):
+
+      <PropertyGroup>
+        <!-- Enable spec generation after every dotnet publish -->
+        <GenerateAgentSpecOnPublish>true</GenerateAgentSpecOnPublish>
+
+        <!-- Optional: override the output directory (default: wwwroot/agents) -->
+        <AgentSpecOutputPath>wwwroot/agents</AgentSpecOutputPath>
+      </PropertyGroup>
+
+    When GenerateAgentSpecOnPublish is true, the Aspeckd.targets file will:
+      1. Publish the application normally.
+      2. Run the published binary with ASPECKD_GENERATE=1 so that the in-process
+         AgentSpecGeneratorHostedService writes the JSON files and exits.
+      3. Include the generated files in the publish output under wwwroot/agents/.
+
+    The application must call services.AddAgentSpec() (not AddStaticAgentSpec()) so that
+    the runtime IAgentSpecProvider is available for the generation step.
+
+    USAGE — serving pre-generated files
+    ====================================
+    Once you have generated the files (either via the target above or by calling
+    AgentSpecFileWriter.WriteAsync directly), register the static provider:
+
+      builder.Services.AddStaticAgentSpec(
+          Path.Combine(builder.Environment.WebRootPath, "agents"));
+      // ...
+      app.MapAgentSpec();
+
+    The spec endpoints will then be served from the static files instead of being
+    computed at runtime.
+  -->
+
+  <PropertyGroup>
+    <!-- Set to 'true' to run spec generation after dotnet publish. -->
+    <GenerateAgentSpecOnPublish Condition="'$(GenerateAgentSpecOnPublish)' == ''">false</GenerateAgentSpecOnPublish>
+
+    <!--
+      Output path for the generated spec files, relative to the project directory.
+      The path is also used as the publish-output subfolder under wwwroot/agents.
+    -->
+    <AgentSpecOutputPath Condition="'$(AgentSpecOutputPath)' == ''">wwwroot/agents</AgentSpecOutputPath>
+  </PropertyGroup>
+
+  <!-- =========================================================================
+       GenerateAgentSpec
+       Runs the published application binary with ASPECKD_GENERATE=1 so that the
+       AgentSpecGeneratorHostedService writes the JSON files to AgentSpecOutputPath
+       and exits.  Only executes when GenerateAgentSpecOnPublish=true.
+       ========================================================================= -->
+  <Target Name="GenerateAgentSpec"
+          AfterTargets="Publish"
+          Condition="'$(GenerateAgentSpecOnPublish)' == 'true'">
+
+    <PropertyGroup>
+      <!-- Resolve an absolute path for the output directory. -->
+      <_AspeckdAbsoluteOutput>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(AgentSpecOutputPath)'))</_AspeckdAbsoluteOutput>
+    </PropertyGroup>
+
+    <Message Importance="high"
+             Text="Aspeckd: generating agent spec files → $(_AspeckdAbsoluteOutput)" />
+
+    <!--
+      Run the published entry-point with the generation environment variables set.
+      The hosted service detects ASPECKD_GENERATE=1, writes the files, then calls
+      IHostApplicationLifetime.StopApplication() so the process exits cleanly.
+    -->
+    <Exec Command="&quot;$(DotNetHostPath)&quot; &quot;$(PublishDir)$(AssemblyName).dll&quot;"
+          EnvironmentVariables="ASPECKD_GENERATE=1;ASPECKD_GENERATE_OUTPUT=$(_AspeckdAbsoluteOutput)"
+          WorkingDirectory="$(PublishDir)" />
+
+    <Message Importance="high" Text="Aspeckd: agent spec generation complete." />
+  </Target>
+
+  <!-- =========================================================================
+       IncludeAgentSpecInPublish
+       When AgentSpecStaticFilesPath points to a directory of pre-generated files,
+       copies those files into the publish output under wwwroot/agents/ so they are
+       available to the static-file middleware in production.
+       ========================================================================= -->
+  <Target Name="IncludeAgentSpecInPublish"
+          AfterTargets="ComputeFilesToPublish"
+          Condition="'$(AgentSpecStaticFilesPath)' != '' and Exists('$(AgentSpecStaticFilesPath)')">
+
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(AgentSpecStaticFilesPath)\**\*.*">
+        <RelativePath>wwwroot/agents/%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+
+    <Message Importance="normal"
+             Text="Aspeckd: including pre-generated spec files from '$(AgentSpecStaticFilesPath)' in publish output." />
+  </Target>
+
+</Project>

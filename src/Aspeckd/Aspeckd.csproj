@@ -22,6 +22,12 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <!--
+      Pack the MSBuild targets file into the NuGet package so that consumers
+      automatically get the GenerateAgentSpec and IncludeAgentSpecInPublish
+      targets when they reference the Aspeckd package.
+    -->
+    <None Include="build/Aspeckd.targets" Pack="true" PackagePath="build/Aspeckd.targets" />
   </ItemGroup>
 
   <ItemGroup>
