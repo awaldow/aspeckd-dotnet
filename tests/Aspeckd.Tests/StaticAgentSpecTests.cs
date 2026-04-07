@@ -171,6 +171,22 @@ public class StaticAgentSpecTests : IClassFixture<TestWebAppFactory>, IAsyncLife
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Static_GetEndpointDetail_RejectsPathTraversalId()
+    {
+        // An id with directory-traversal characters should be rejected (404), not leak files.
+        var response = await _staticClient!.GetAsync("/agents/..%2F..%2Fetc%2Fpasswd");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Static_GetEndpointDetail_RejectsIdWithUppercase()
+    {
+        // IDs are always lowercase; an uppercase id should not be found.
+        var response = await _staticClient!.GetAsync("/agents/GET-API-HELLO");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     // -----------------------------------------------------------------------
     // Static provider – GET /agents/schemas
     // -----------------------------------------------------------------------
