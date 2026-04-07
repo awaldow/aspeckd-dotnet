@@ -31,4 +31,10 @@ public sealed class AgentEndpointSummary
 
     /// <summary>Relative URL to the full detail page for this endpoint (e.g. <c>/agents/get-api-weather</c>).</summary>
     public string DetailUrl { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Name of the <see cref="AgentToolGroup"/> this endpoint belongs to, or
+    /// <see langword="null"/> when the endpoint is not part of any group.
+    /// </summary>
+    public string? Group { get; init; }
 }
