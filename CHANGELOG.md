@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.1.9](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.8...v0.1.9) (2026-04-08)
+
+
+### Features
+
+* add AgentToolGroupAttribute for grouping API operations ([e851c88](https://github.com/awaldow/aspeckd-dotnet/commit/e851c8890e9cf97fd631c21a623ac7892655b517))
+* Add auth representation to agent spec (AgentAuthInfo model, root/group auth blocks) ([9b33039](https://github.com/awaldow/aspeckd-dotnet/commit/9b33039b1451e4db900ac59ea3af26a35cd350c3))
+* Auth representation in the agent spec doc tree ([a211cfe](https://github.com/awaldow/aspeckd-dotnet/commit/a211cfe13c8de11a6f328c48642c2811f8c0cc7d))
+* Build-time description quality warnings (ASPECKD001/ASPECKD002) ([eea2b1c](https://github.com/awaldow/aspeckd-dotnet/commit/eea2b1cfc1675e5f5c424e0ea8e42016687b0389))
+* build-time description warnings (ASPECKD001/ASPECKD002) ([da43d38](https://github.com/awaldow/aspeckd-dotnet/commit/da43d385c3398f07066cf0db2e83437fe27677b7))
+* build-time static agent spec generation ([14ef43d](https://github.com/awaldow/aspeckd-dotnet/commit/14ef43d7430e88e031f80500082e90a89389afe9))
+* build-time static generation of /.well-known/agents/* doc tree ([dc0dceb](https://github.com/awaldow/aspeckd-dotnet/commit/dc0dceba9cce1548552399676cee4e33086fe2dd))
+* endpoint-level required claims + /.well-known/agents default path ([e37ce50](https://github.com/awaldow/aspeckd-dotnet/commit/e37ce50c46348b6e870ed8958d911eb013b25d2c))
+* replace golden spec with comprehensive factory exercising all features ([baac987](https://github.com/awaldow/aspeckd-dotnet/commit/baac98712fce679a38a78ed1ba735b239315127a))
+* slim index.json to name/description/detailUrl only ([59ac036](https://github.com/awaldow/aspeckd-dotnet/commit/59ac036e1b3876c995773371f2bb5b7ec49950b5))
+
+
+### Bug Fixes
+
+* correct test method name spelling ([2a8aafe](https://github.com/awaldow/aspeckd-dotnet/commit/2a8aafef1f9d8b8b4b9add3cb16ecf5a7c78e904))
+* prevent path traversal in StaticFileAgentSpecProvider ([6357827](https://github.com/awaldow/aspeckd-dotnet/commit/63578270550a23b77d194c1326211a8bc1748ed6))
+* remove redundant null-coalesce in AgentRequiredClaimsAttribute; drop trailing period from golden spec description ([da8eef2](https://github.com/awaldow/aspeckd-dotnet/commit/da8eef207f91a14bcc684298ead93618cad2c3f4))
+* Remove unused constant and redundant null assignments in test helpers ([d1f9ff9](https://github.com/awaldow/aspeckd-dotnet/commit/d1f9ff98b6e7f58a50a101d4f667ad220d9c04d7))
+
 ## [0.1.8](https://github.com/awaldow/aspeckd-dotnet/compare/v0.1.7...v0.1.8) (2026-03-26)
 
 
