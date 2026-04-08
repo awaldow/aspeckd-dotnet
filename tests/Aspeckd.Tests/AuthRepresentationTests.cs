@@ -233,7 +233,6 @@ internal sealed class AuthTestWebAppFactory : WebApplicationFactory<AuthTestWebA
     private readonly bool _useGroupAuthInstructions;
 
     internal const string GroupAuthInstructions = "Need elevated access for this group.";
-    internal const string GroupPimInstructions = "Request PIM activation.";
 
     public AuthTestWebAppFactory(AgentAuthInfo? auth, bool useGroupAuthInstructions = false)
     {

@@ -43,8 +43,6 @@ public sealed class GoldenSpecWebAppFactory : WebApplicationFactory<GoldenSpecWe
                         {
                             Scheme = "bearer",
                             HeaderName = "Authorization",
-                            TokenEndpoint = null,
-                            GrantType = null,
                             Instructions = "This API uses Azure AD tokens. Ensure you have an active session with the appropriate role assignments."
                         };
                     });
