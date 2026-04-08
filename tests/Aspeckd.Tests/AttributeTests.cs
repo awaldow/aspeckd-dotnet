@@ -177,4 +177,52 @@ public class AttributeTests
         Assert.True(usage.Inherited);
         Assert.False(usage.AllowMultiple);
     }
+
+    // -----------------------------------------------------------------------
+    // AspeckdSuppressWarningAttribute
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void AspeckdSuppressWarningAttribute_NoArgs_CodesIsEmpty()
+    {
+        var attr = new AspeckdSuppressWarningAttribute();
+        Assert.Empty(attr.Codes);
+    }
+
+    [Fact]
+    public void AspeckdSuppressWarningAttribute_SingleCode_StoredInCodes()
+    {
+        var attr = new AspeckdSuppressWarningAttribute("ASPECKD001");
+        Assert.Single(attr.Codes);
+        Assert.Equal("ASPECKD001", attr.Codes[0]);
+    }
+
+    [Fact]
+    public void AspeckdSuppressWarningAttribute_MultipleCodes_AllStored()
+    {
+        var attr = new AspeckdSuppressWarningAttribute("ASPECKD001", "ASPECKD002");
+        Assert.Equal(new[] { "ASPECKD001", "ASPECKD002" }, attr.Codes);
+    }
+
+    [Fact]
+    public void AspeckdSuppressWarningAttribute_AllowsMultiple()
+    {
+        var usage = typeof(AspeckdSuppressWarningAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        Assert.True(usage.AllowMultiple);
+    }
+
+    [Fact]
+    public void AspeckdSuppressWarningAttribute_IsInherited()
+    {
+        var usage = typeof(AspeckdSuppressWarningAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        Assert.True(usage.Inherited);
+    }
 }

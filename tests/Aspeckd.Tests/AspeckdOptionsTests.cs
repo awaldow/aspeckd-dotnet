@@ -55,4 +55,32 @@ public class AspeckdOptionsTests
         Assert.Equal("bearer", options.Auth.Scheme);
         Assert.Equal("Authorization", options.Auth.HeaderName);
     }
+
+    [Fact]
+    public void DefaultDescriptionWarnings_IsTrue()
+    {
+        var options = new AspeckdOptions();
+        Assert.True(options.DescriptionWarnings);
+    }
+
+    [Fact]
+    public void DescriptionWarnings_CanBeDisabled()
+    {
+        var options = new AspeckdOptions { DescriptionWarnings = false };
+        Assert.False(options.DescriptionWarnings);
+    }
+
+    [Fact]
+    public void DefaultMinimumDescriptionLength_Is30()
+    {
+        var options = new AspeckdOptions();
+        Assert.Equal(30, options.MinimumDescriptionLength);
+    }
+
+    [Fact]
+    public void MinimumDescriptionLength_CanBeOverridden()
+    {
+        var options = new AspeckdOptions { MinimumDescriptionLength = 50 };
+        Assert.Equal(50, options.MinimumDescriptionLength);
+    }
 }
