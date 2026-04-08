@@ -32,6 +32,6 @@ public sealed class AgentRequiredClaimsAttribute : Attribute
     /// </param>
     public AgentRequiredClaimsAttribute(params string[] claims)
     {
-        Claims = claims ?? [];
+        Claims = claims;
     }
 }

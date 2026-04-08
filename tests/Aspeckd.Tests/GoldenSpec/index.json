@@ -1,6 +1,6 @@
 {
   "title": "Golden Spec API",
-  "description": "Comprehensive spec covering all Aspeckd features.",
+  "description": "Comprehensive spec covering all Aspeckd features",
   "schemasUrl": "/.well-known/agents/schemas",
   "endpoints": [
     {

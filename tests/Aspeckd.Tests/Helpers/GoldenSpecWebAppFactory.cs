@@ -38,7 +38,7 @@ public sealed class GoldenSpecWebAppFactory : WebApplicationFactory<GoldenSpecWe
                     services.AddAgentSpec(opt =>
                     {
                         opt.Title = "Golden Spec API";
-                        opt.Description = "Comprehensive spec covering all Aspeckd features.";
+                        opt.Description = "Comprehensive spec covering all Aspeckd features";
                     });
                     services.AddControllers();
                     services.AddEndpointsApiExplorer();
