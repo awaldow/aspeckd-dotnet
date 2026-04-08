@@ -45,4 +45,23 @@ public sealed class AspeckdOptions
     /// <see langword="null"/> when the API has no auth or auth metadata is not configured.
     /// </summary>
     public Models.AgentAuthInfo? Auth { get; set; }
+
+    /// <summary>
+    /// Configures the API versions that should be listed at the root
+    /// <c>/.well-known/agents</c> endpoint.
+    /// When non-empty the root endpoint returns an <see cref="Models.AgentVersionIndex"/>
+    /// instead of an <see cref="Models.AgentSpecIndex"/>; each version links to its own
+    /// complete doc tree at <c>{BasePath}/{Version}</c>.
+    /// Leave empty (the default) for single-version APIs — the existing behaviour is
+    /// preserved and no <c>versions</c> wrapper is added.
+    /// </summary>
+    public IList<AspeckdVersionOptions> Versions { get; set; } = new List<AspeckdVersionOptions>();
+
+    /// <summary>
+    /// The version identifier that agents should use when they have no specific version
+    /// preference. Surfaced as the <c>defaultVersion</c> field in the root
+    /// <see cref="Models.AgentVersionIndex"/> response.
+    /// <see langword="null"/> when versioning is not configured or no default is set.
+    /// </summary>
+    public string? DefaultVersion { get; set; }
 }
