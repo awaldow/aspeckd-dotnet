@@ -29,4 +29,13 @@ public sealed class AgentToolGroup
     /// Full endpoint detail is available at each entry's <see cref="AgentIndexEntry.DetailUrl"/>.
     /// </summary>
     public IReadOnlyList<AgentIndexEntry> Endpoints { get; init; } = [];
+
+    /// <summary>
+    /// Optional group-level authentication override.  When present, the non-<see langword="null"/>
+    /// fields override the corresponding fields from the root-level
+    /// <see cref="AgentSpecIndex.Auth"/> block. <see langword="null"/> fields in this object
+    /// are inherited from the root.  <see langword="null"/> when no group-level auth override
+    /// is configured.
+    /// </summary>
+    public AgentAuthInfo? Auth { get; init; }
 }

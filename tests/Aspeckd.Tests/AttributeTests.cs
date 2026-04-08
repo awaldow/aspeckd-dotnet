@@ -136,6 +136,23 @@ public class AttributeTests
     }
 
     [Fact]
+    public void AgentToolGroupAttribute_AuthInstructionsDefaultsToNull()
+    {
+        var attr = new AgentToolGroupAttribute("Weather");
+        Assert.Null(attr.AuthInstructions);
+    }
+
+    [Fact]
+    public void AgentToolGroupAttribute_StoresAuthInstructions()
+    {
+        var attr = new AgentToolGroupAttribute("Weather")
+        {
+            AuthInstructions = "Request PIM activation for the Weather role."
+        };
+        Assert.Equal("Request PIM activation for the Weather role.", attr.AuthInstructions);
+    }
+
+    [Fact]
     public void AgentRequiredClaimsAttribute_StoresClaims()
     {
         var attr = new AgentRequiredClaimsAttribute("orders:read", "orders:write");

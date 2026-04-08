@@ -37,4 +37,12 @@ public sealed class AspeckdOptions
     /// Defaults to <see langword="false"/>.
     /// </summary>
     public bool UseOpenApiMetadataFallback { get; set; } = false;
+
+    /// <summary>
+    /// Root-level authentication configuration included in the agent spec index.
+    /// Set this to describe the API's overall auth mechanism so that agents can evaluate
+    /// whether their current token is sufficient and understand how to acquire one if not.
+    /// <see langword="null"/> when the API has no auth or auth metadata is not configured.
+    /// </summary>
+    public Models.AgentAuthInfo? Auth { get; set; }
 }

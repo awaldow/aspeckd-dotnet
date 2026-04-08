@@ -52,7 +52,8 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
             Description = _options.Description,
             SchemasUrl = $"{basePath}/schemas",
             Endpoints = endpoints,
-            Groups = groups
+            Groups = groups,
+            Auth = _options.Auth
         };
     }
 
@@ -250,7 +251,10 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
                 Name = kvp.Key,
                 Description = kvp.Value.Attr.Description,
                 RequiredClaims = kvp.Value.Attr.RequiredClaims,
-                Endpoints = kvp.Value.Endpoints
+                Endpoints = kvp.Value.Endpoints,
+                Auth = kvp.Value.Attr.AuthInstructions is not null
+                    ? new AgentAuthInfo { Instructions = kvp.Value.Attr.AuthInstructions }
+                    : null
             })
             .ToList();
     }

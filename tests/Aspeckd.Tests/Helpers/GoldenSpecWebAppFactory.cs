@@ -39,6 +39,12 @@ public sealed class GoldenSpecWebAppFactory : WebApplicationFactory<GoldenSpecWe
                     {
                         opt.Title = "Golden Spec API";
                         opt.Description = "Comprehensive spec covering all Aspeckd features";
+                        opt.Auth = new Aspeckd.Models.AgentAuthInfo
+                        {
+                            Scheme = "bearer",
+                            HeaderName = "Authorization",
+                            Instructions = "This API uses Azure AD tokens. Ensure you have an active session with the appropriate role assignments."
+                        };
                     });
                     services.AddControllers();
                     services.AddEndpointsApiExplorer();
@@ -71,11 +77,14 @@ public sealed class GoldenSpecWebAppFactory : WebApplicationFactory<GoldenSpecWe
 
                         // -------------------------------------------------------
                         // Orders group — GET/POST/DELETE, no claims on the group,
-                        // endpoint-level claims via AgentRequiredClaimsAttribute
+                        // endpoint-level claims via AgentRequiredClaimsAttribute,
+                        // group-level auth instructions override
                         // -------------------------------------------------------
                         endpoints.MapGet(
                             "/api/orders/{id}",
-                            [AgentToolGroup("Orders", Description = "Order management operations")]
+                            [AgentToolGroup("Orders",
+                                Description = "Order management operations",
+                                AuthInstructions = "Order operations require the orders role. Request access through the Azure portal.")]
                             [AgentDescription("Get an order by its identifier")]
                             [AgentName("GetOrder")]
                             [AgentRequiredClaims("orders:read")]
@@ -83,7 +92,9 @@ public sealed class GoldenSpecWebAppFactory : WebApplicationFactory<GoldenSpecWe
 
                         endpoints.MapPost(
                             "/api/orders",
-                            [AgentToolGroup("Orders", Description = "Order management operations")]
+                            [AgentToolGroup("Orders",
+                                Description = "Order management operations",
+                                AuthInstructions = "Order operations require the orders role. Request access through the Azure portal.")]
                             [AgentDescription("Create a new order")]
                             [AgentName("CreateOrder")]
                             [AgentRequiredClaims("orders:write")]
@@ -92,7 +103,9 @@ public sealed class GoldenSpecWebAppFactory : WebApplicationFactory<GoldenSpecWe
 
                         endpoints.MapDelete(
                             "/api/orders/{id}",
-                            [AgentToolGroup("Orders", Description = "Order management operations")]
+                            [AgentToolGroup("Orders",
+                                Description = "Order management operations",
+                                AuthInstructions = "Order operations require the orders role. Request access through the Azure portal.")]
                             [AgentDescription("Cancel an existing order")]
                             [AgentName("CancelOrder")]
                             [AgentRequiredClaims("orders:write")]

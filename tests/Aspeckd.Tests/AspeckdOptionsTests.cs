@@ -31,4 +31,28 @@ public class AspeckdOptionsTests
         var options = new AspeckdOptions { BasePath = "/ai" };
         Assert.Equal("/ai", options.BasePath);
     }
+
+    [Fact]
+    public void DefaultAuth_IsNull()
+    {
+        var options = new AspeckdOptions();
+        Assert.Null(options.Auth);
+    }
+
+    [Fact]
+    public void Auth_CanBeSet()
+    {
+        var options = new AspeckdOptions
+        {
+            Auth = new Aspeckd.Models.AgentAuthInfo
+            {
+                Scheme = "bearer",
+                HeaderName = "Authorization"
+            }
+        };
+
+        Assert.NotNull(options.Auth);
+        Assert.Equal("bearer", options.Auth.Scheme);
+        Assert.Equal("Authorization", options.Auth.HeaderName);
+    }
 }
