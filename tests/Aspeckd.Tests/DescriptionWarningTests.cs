@@ -223,7 +223,7 @@ public class DescriptionWarningTests
     // -----------------------------------------------------------------------
 
     [Fact]
-    public void GetIndex_Aspeckd001Message_ContainsSuppressinstructions()
+    public void GetIndex_Aspeckd001Message_ContainsSuppressionInstructions()
     {
         var (provider, logs) = BuildProvider();
         provider.GetIndex();
