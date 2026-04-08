@@ -17,8 +17,12 @@ namespace Aspeckd.Services;
 /// </list>
 /// This provider is registered by <c>AddStaticAgentSpec()</c> and is suitable for
 /// production deployments where the spec is baked in at build / publish time.
+/// When the configured directory contains version subdirectories (written by
+/// <see cref="AgentSpecFileWriter.WriteAsync"/> with versions configured),
+/// this provider also implements <see cref="IVersionedAgentSpecProviderFactory"/>
+/// to serve per-version data from those subdirectories.
 /// </remarks>
-internal sealed class StaticFileAgentSpecProvider : IAgentSpecProvider
+internal sealed class StaticFileAgentSpecProvider : IAgentSpecProvider, IVersionedAgentSpecProviderFactory
 {
     // Endpoint IDs are produced by AgentSpecProvider.BuildId which only outputs
     // lowercase letters, digits, and hyphens (e.g. "get-api-weather-forecast").
@@ -27,6 +31,9 @@ internal sealed class StaticFileAgentSpecProvider : IAgentSpecProvider
     private static readonly Regex ValidIdPattern = new(@"^[a-z0-9\-]+$", RegexOptions.Compiled);
 
     private readonly string _directory;
+
+    // Keyed by version string; populated when version subdirectories are registered.
+    private readonly IReadOnlyDictionary<string, StaticFileAgentSpecProvider>? _versionProviders;
 
     private static readonly JsonSerializerOptions ReadOptions = new()
     {
@@ -40,6 +47,22 @@ internal sealed class StaticFileAgentSpecProvider : IAgentSpecProvider
         // Resolve to an absolute, canonical path once so that the confinement
         // check in ReadJson is reliable regardless of the working directory.
         _directory = Path.GetFullPath(staticFilesDirectory);
+    }
+
+    /// <summary>
+    /// Creates a provider that also serves per-version subdirectories.
+    /// </summary>
+    /// <param name="staticFilesDirectory">Root directory containing the spec files.</param>
+    /// <param name="versions">Version identifiers whose subdirectories exist under <paramref name="staticFilesDirectory"/>.</param>
+    public StaticFileAgentSpecProvider(string staticFilesDirectory, IEnumerable<string> versions)
+        : this(staticFilesDirectory)
+    {
+        _versionProviders = versions
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                v => v,
+                v => new StaticFileAgentSpecProvider(Path.Combine(staticFilesDirectory, v)),
+                StringComparer.OrdinalIgnoreCase);
     }
 
     /// <inheritdoc/>
@@ -59,6 +82,15 @@ internal sealed class StaticFileAgentSpecProvider : IAgentSpecProvider
     /// <inheritdoc/>
     public IReadOnlyList<AgentSchemaInfo> GetSchemas()
         => ReadJson<List<AgentSchemaInfo>>("schemas.json") ?? [];
+
+    /// <inheritdoc cref="IVersionedAgentSpecProviderFactory.GetVersionProvider"/>
+    public IAgentSpecProvider? GetVersionProvider(string version)
+    {
+        if (_versionProviders is null)
+            return null;
+
+        return _versionProviders.TryGetValue(version, out var p) ? p : null;
+    }
 
     // -------------------------------------------------------------------------
     // Helpers

@@ -1,6 +1,7 @@
 using Aspeckd.Configuration;
 using Aspeckd.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Aspeckd.Extensions;
 
@@ -59,8 +60,18 @@ public static class ServiceCollectionExtensions
         if (configure is not null)
             optionsBuilder.Configure(configure);
 
-        services.AddSingleton<IAgentSpecProvider>(
-            new StaticFileAgentSpecProvider(staticFilesDirectory));
+        services.AddSingleton<IAgentSpecProvider>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<AspeckdOptions>>().Value;
+            var versionNames = options.Versions
+                .Where(v => !string.IsNullOrWhiteSpace(v.Version))
+                .Select(v => v.Version)
+                .ToList();
+
+            return versionNames.Count > 0
+                ? new StaticFileAgentSpecProvider(staticFilesDirectory, versionNames)
+                : new StaticFileAgentSpecProvider(staticFilesDirectory);
+        });
 
         return services;
     }

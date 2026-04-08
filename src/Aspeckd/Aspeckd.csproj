@@ -44,6 +44,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      Asp.Versioning.Http provides IApiVersionDescriptionProvider, which Aspeckd uses
+      to auto-detect API versions when the user calls AddApiVersioning() + AddApiExplorer().
+      This is a soft dependency: the auto-detection only activates when
+      IApiVersionDescriptionProvider is registered in the DI container; apps that do not
+      use Asp.Versioning are unaffected.
+    -->
+    <PackageReference Include="Asp.Versioning.Http" Version="8.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Aspeckd.Core\Aspeckd.Core.csproj" />
   </ItemGroup>
 
