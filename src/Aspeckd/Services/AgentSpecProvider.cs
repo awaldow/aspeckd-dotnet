@@ -1,10 +1,12 @@
 using System.Text.RegularExpressions;
+using System.Threading;
 using Aspeckd.Attributes;
 using Aspeckd.Configuration;
 using Aspeckd.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Aspeckd.Services;
@@ -23,13 +25,17 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
 {
     private readonly IApiDescriptionGroupCollectionProvider _apiDescriptionProvider;
     private readonly AspeckdOptions _options;
+    private readonly ILogger<AgentSpecProvider> _logger;
+    private int _warningsEmitted;
 
     public AgentSpecProvider(
         IApiDescriptionGroupCollectionProvider apiDescriptionProvider,
-        IOptions<AspeckdOptions> options)
+        IOptions<AspeckdOptions> options,
+        ILogger<AgentSpecProvider> logger)
     {
         _apiDescriptionProvider = apiDescriptionProvider;
         _options = options.Value;
+        _logger = logger;
     }
 
     public AgentSpecIndex GetIndex()
@@ -45,6 +51,10 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
             .ToList();
 
         var groups = BuildGroups(descriptions, basePath);
+
+        // Emit description-quality warnings exactly once per provider lifetime.
+        if (Interlocked.Exchange(ref _warningsEmitted, 1) == 0)
+            EmitDescriptionWarnings(descriptions);
 
         return new AgentSpecIndex
         {
@@ -306,5 +316,141 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
     {
         var trimmed = path.TrimEnd('/');
         return trimmed.StartsWith('/') ? trimmed : $"/{trimmed}";
+    }
+
+    // -------------------------------------------------------------------------
+    // Description-quality warning helpers
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Warning code for descriptions that are shorter than
+    /// <see cref="AspeckdOptions.MinimumDescriptionLength"/>.
+    /// </summary>
+    internal const string WarnCodeTerse = "ASPECKD001";
+
+    /// <summary>
+    /// Warning code for descriptions that are <see langword="null"/> or empty.
+    /// </summary>
+    internal const string WarnCodeMissing = "ASPECKD002";
+
+    private void EmitDescriptionWarnings(IReadOnlyList<ApiDescription> descriptions)
+    {
+        if (!_options.DescriptionWarnings)
+            return;
+
+        var minLen = _options.MinimumDescriptionLength;
+
+        // ---------------------------------------------------------------
+        // Root description
+        // ---------------------------------------------------------------
+        if (string.IsNullOrEmpty(_options.Description))
+        {
+            _logger.LogWarning(
+                "{Code}: The root API description is missing. " +
+                "Adding a root description helps agents understand the overall purpose of this API. " +
+                "To suppress this warning, set options.DescriptionWarnings = false.",
+                WarnCodeMissing);
+        }
+        else if (_options.Description.Length < minLen)
+        {
+            _logger.LogWarning(
+                "{Code}: The root API description is {Length} character(s) (\"{Description}\"). " +
+                "Descriptions under {MinLength} characters may be too terse for effective agent consumption. " +
+                "Consider a description that explains what the API does, who its intended consumers are, " +
+                "and any important usage notes. " +
+                "To suppress this warning, set options.DescriptionWarnings = false.",
+                WarnCodeTerse, _options.Description.Length, _options.Description, minLen);
+        }
+
+        // ---------------------------------------------------------------
+        // Group descriptions — check representative endpoint per group
+        // ---------------------------------------------------------------
+        var groupRepresentatives = new Dictionary<string, (AgentToolGroupAttribute Attr, IList<object>? Metadata)>(
+            StringComparer.Ordinal);
+
+        foreach (var d in descriptions)
+        {
+            var attr = d.ActionDescriptor?.EndpointMetadata?.OfType<AgentToolGroupAttribute>().FirstOrDefault();
+            if (attr is null)
+                continue;
+
+            if (!groupRepresentatives.ContainsKey(attr.Name))
+                groupRepresentatives[attr.Name] = (attr, d.ActionDescriptor?.EndpointMetadata?.ToList());
+        }
+
+        foreach (var (groupName, (attr, metadata)) in groupRepresentatives)
+        {
+            if (string.IsNullOrEmpty(attr.Description))
+            {
+                if (!IsSuppressed(metadata, WarnCodeMissing))
+                    _logger.LogWarning(
+                        "{Code}: Group '{Group}' has no description. " +
+                        "Adding a group description helps agents understand the shared purpose of these endpoints. " +
+                        "To suppress this warning, set options.DescriptionWarnings = false or apply " +
+                        "[AspeckdSuppressWarning] to the endpoint that declares the group.",
+                        WarnCodeMissing, groupName);
+            }
+            else if (attr.Description.Length < minLen)
+            {
+                if (!IsSuppressed(metadata, WarnCodeTerse))
+                    _logger.LogWarning(
+                        "{Code}: Group '{Group}' has a description of {Length} character(s) (\"{Description}\"). " +
+                        "Descriptions under {MinLength} characters may be too terse for effective agent consumption. " +
+                        "Consider describing what this group of endpoints provides and when agents should use them. " +
+                        "To suppress this warning, set options.DescriptionWarnings = false or apply " +
+                        "[AspeckdSuppressWarning] to the endpoint that declares the group.",
+                        WarnCodeTerse, groupName, attr.Description.Length, attr.Description, minLen);
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // Endpoint descriptions
+        // ---------------------------------------------------------------
+        foreach (var d in descriptions)
+        {
+            var metadata = d.ActionDescriptor?.EndpointMetadata?.ToList();
+            var desc = BuildDescription(d);
+            var id = BuildId(d);
+
+            if (string.IsNullOrEmpty(desc))
+            {
+                if (!IsSuppressed(metadata, WarnCodeMissing))
+                    _logger.LogWarning(
+                        "{Code}: Endpoint '{Id}' has no description. " +
+                        "Agents rely on descriptions to understand what an endpoint does before calling it. " +
+                        "Consider adding [AgentDescription(...)] with a description that explains what the endpoint " +
+                        "returns, what parameters it expects, and notable behavior. " +
+                        "To suppress this warning, set options.DescriptionWarnings = false or apply " +
+                        "[AspeckdSuppressWarning] to the endpoint.",
+                        WarnCodeMissing, id);
+            }
+            else if (desc.Length < minLen)
+            {
+                if (!IsSuppressed(metadata, WarnCodeTerse))
+                    _logger.LogWarning(
+                        "{Code}: Endpoint '{Id}' has a description of {Length} character(s) (\"{Description}\"). " +
+                        "Descriptions under {MinLength} characters may be too terse for effective agent consumption. " +
+                        "Consider describing what the endpoint returns, what parameters it expects, and notable behavior " +
+                        "(e.g., \"Retrieve a user's full profile including role assignments and team memberships by UUID. " +
+                        "Returns 404 if the user has been deleted.\"). " +
+                        "To suppress this warning, set options.DescriptionWarnings = false or apply " +
+                        "[AspeckdSuppressWarning] to the endpoint.",
+                        WarnCodeTerse, id, desc.Length, desc, minLen);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when the endpoint metadata contains an
+    /// <see cref="AspeckdSuppressWarningAttribute"/> that covers <paramref name="code"/>.
+    /// An attribute with no codes suppresses all warnings.
+    /// </summary>
+    private static bool IsSuppressed(IList<object>? metadata, string code)
+    {
+        if (metadata is null)
+            return false;
+
+        return metadata.OfType<AspeckdSuppressWarningAttribute>()
+            .Any(a => a.Codes.Length == 0 || a.Codes.Contains(code, StringComparer.Ordinal));
     }
 }
