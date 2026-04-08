@@ -25,23 +25,22 @@ public class OpenApiFallbackTests : IClassFixture<FallbackTestWebAppFactory>
     [Fact]
     public async Task Fallback_UsesWithNameAsEndpointName()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var products = index.Endpoints.FirstOrDefault(e => e.Route == "/api/products");
+        // WithName("GetProducts") is the name source when UseOpenApiMetadataFallback=true.
+        var products = index.Endpoints.FirstOrDefault(e => e.Name == "GetProducts");
         Assert.NotNull(products);
-        Assert.Equal("GetProducts", products.Name);
     }
 
     [Fact]
     public async Task Fallback_UsesWithNameForCategoryEndpoint()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var categories = index.Endpoints.FirstOrDefault(e => e.Route == "/api/categories");
+        var categories = index.Endpoints.FirstOrDefault(e => e.Name == "GetCategories");
         Assert.NotNull(categories);
-        Assert.Equal("GetCategories", categories.Name);
     }
 
     // -----------------------------------------------------------------------
@@ -51,10 +50,10 @@ public class OpenApiFallbackTests : IClassFixture<FallbackTestWebAppFactory>
     [Fact]
     public async Task Fallback_PrefersWithSummaryOverWithDescription()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var products = index.Endpoints.FirstOrDefault(e => e.Route == "/api/products");
+        var products = index.Endpoints.FirstOrDefault(e => e.Name == "GetProducts");
         Assert.NotNull(products);
         // WithSummary wins over WithDescription.
         Assert.Equal("Lists all products", products.Description);
@@ -63,10 +62,10 @@ public class OpenApiFallbackTests : IClassFixture<FallbackTestWebAppFactory>
     [Fact]
     public async Task Fallback_UsesWithDescriptionWhenNoSummary()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var tags = index.Endpoints.FirstOrDefault(e => e.Route == "/api/tags");
+        var tags = index.Endpoints.FirstOrDefault(e => e.Name == "GetTags");
         Assert.NotNull(tags);
         Assert.Equal("Returns all tags in the system.", tags.Description);
     }
@@ -74,10 +73,10 @@ public class OpenApiFallbackTests : IClassFixture<FallbackTestWebAppFactory>
     [Fact]
     public async Task Fallback_UsesWithSummaryWhenOnlySummaryPresent()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var categories = index.Endpoints.FirstOrDefault(e => e.Route == "/api/categories");
+        var categories = index.Endpoints.FirstOrDefault(e => e.Name == "GetCategories");
         Assert.NotNull(categories);
         Assert.Equal("Lists all categories", categories.Description);
     }
@@ -89,10 +88,10 @@ public class OpenApiFallbackTests : IClassFixture<FallbackTestWebAppFactory>
     [Fact]
     public async Task Fallback_AgentDescriptionAttributeTakesPrecedenceOverWithSummary()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var orders = index.Endpoints.FirstOrDefault(e => e.Route == "/api/orders");
+        var orders = index.Endpoints.FirstOrDefault(e => e.Name == "OrdersOverride");
         Assert.NotNull(orders);
         Assert.Equal("Agent-specific description", orders.Description);
     }
@@ -100,12 +99,12 @@ public class OpenApiFallbackTests : IClassFixture<FallbackTestWebAppFactory>
     [Fact]
     public async Task Fallback_AgentNameAttributeTakesPrecedenceOverWithName()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var orders = index.Endpoints.FirstOrDefault(e => e.Route == "/api/orders");
+        // AgentNameAttribute("OrdersOverride") wins over WithName("GetOrders").
+        var orders = index.Endpoints.FirstOrDefault(e => e.Name == "OrdersOverride");
         Assert.NotNull(orders);
-        Assert.Equal("OrdersOverride", orders.Name);
     }
 
     // -----------------------------------------------------------------------
@@ -115,10 +114,10 @@ public class OpenApiFallbackTests : IClassFixture<FallbackTestWebAppFactory>
     [Fact]
     public async Task Fallback_EndpointWithNoMetadataHasNullDescription()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var bare = index.Endpoints.FirstOrDefault(e => e.Route == "/api/bare");
+        var bare = index.Endpoints.FirstOrDefault(e => e.Name == "GET /api/bare");
         Assert.NotNull(bare);
         Assert.Null(bare.Description);
     }
@@ -126,13 +125,11 @@ public class OpenApiFallbackTests : IClassFixture<FallbackTestWebAppFactory>
     [Fact]
     public async Task Fallback_EndpointWithNoMetadataHasDefaultName()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var bare = index.Endpoints.FirstOrDefault(e => e.Route == "/api/bare");
-        Assert.NotNull(bare);
         // Default name is "METHOD /route" when no attribute or OpenAPI name is set.
-        Assert.Equal("GET /api/bare", bare.Name);
+        Assert.Contains(index.Endpoints, e => e.Name == "GET /api/bare");
     }
 
     // -----------------------------------------------------------------------
@@ -142,10 +139,10 @@ public class OpenApiFallbackTests : IClassFixture<FallbackTestWebAppFactory>
     [Fact]
     public async Task Fallback_DetailEndpointReflectsOpenApiName()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
         Assert.NotNull(index);
 
-        var products = index.Endpoints.First(e => e.Route == "/api/products");
+        var products = index.Endpoints.First(e => e.Name == "GetProducts");
         var detail = await _client.GetFromJsonAsync<AgentEndpointDetail>(products.DetailUrl);
 
         Assert.NotNull(detail);

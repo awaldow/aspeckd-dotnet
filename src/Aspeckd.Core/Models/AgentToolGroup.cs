@@ -24,8 +24,9 @@ public sealed class AgentToolGroup
     public IReadOnlyList<string> RequiredClaims { get; init; } = [];
 
     /// <summary>
-    /// All non-excluded endpoints that belong to this group,
+    /// Lean index entries for all non-excluded endpoints that belong to this group,
     /// ordered by HTTP method then route.
+    /// Full endpoint detail is available at each entry's <see cref="AgentIndexEntry.DetailUrl"/>.
     /// </summary>
-    public IReadOnlyList<AgentEndpointSummary> Endpoints { get; init; } = [];
+    public IReadOnlyList<AgentIndexEntry> Endpoints { get; init; } = [];
 }

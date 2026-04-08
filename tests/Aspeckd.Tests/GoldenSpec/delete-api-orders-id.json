@@ -1,0 +1,22 @@
+{
+  "id": "delete-api-orders-id",
+  "name": "CancelOrder",
+  "httpMethod": "DELETE",
+  "route": "/api/orders/{id}",
+  "description": "Cancel an existing order",
+  "requiredClaims": [
+    "orders:write"
+  ],
+  "consumesContentTypes": [],
+  "responseTypes": {
+    "200": []
+  },
+  "parameters": [
+    {
+      "name": "id",
+      "source": "Path",
+      "type": "String",
+      "isRequired": true
+    }
+  ]
+}

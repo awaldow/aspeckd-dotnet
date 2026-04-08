@@ -1,0 +1,13 @@
+{
+  "id": "get-api-weather-forecast",
+  "name": "GetWeatherForecast",
+  "httpMethod": "GET",
+  "route": "/api/weather/forecast",
+  "description": "Get weather forecast",
+  "requiredClaims": [],
+  "consumesContentTypes": [],
+  "responseTypes": {
+    "200": []
+  },
+  "parameters": []
+}

@@ -1,0 +1,80 @@
+{
+  "title": "Golden Spec API",
+  "description": "Comprehensive spec covering all Aspeckd features",
+  "schemasUrl": "/.well-known/agents/schemas",
+  "endpoints": [
+    {
+      "name": "CancelOrder",
+      "description": "Cancel an existing order",
+      "detailUrl": "/.well-known/agents/delete-api-orders-id"
+    },
+    {
+      "name": "GetOrder",
+      "description": "Get an order by its identifier",
+      "detailUrl": "/.well-known/agents/get-api-orders-id"
+    },
+    {
+      "name": "GetStatus",
+      "description": "Returns the API health status",
+      "detailUrl": "/.well-known/agents/get-api-status"
+    },
+    {
+      "name": "GetWeather",
+      "description": "Get current weather",
+      "detailUrl": "/.well-known/agents/get-api-weather"
+    },
+    {
+      "name": "GetWeatherForecast",
+      "description": "Get weather forecast",
+      "detailUrl": "/.well-known/agents/get-api-weather-forecast"
+    },
+    {
+      "name": "CreateOrder",
+      "description": "Create a new order",
+      "detailUrl": "/.well-known/agents/post-api-orders"
+    }
+  ],
+  "groups": [
+    {
+      "name": "Orders",
+      "description": "Order management operations",
+      "requiredClaims": [],
+      "endpoints": [
+        {
+          "name": "CancelOrder",
+          "description": "Cancel an existing order",
+          "detailUrl": "/.well-known/agents/delete-api-orders-id"
+        },
+        {
+          "name": "GetOrder",
+          "description": "Get an order by its identifier",
+          "detailUrl": "/.well-known/agents/get-api-orders-id"
+        },
+        {
+          "name": "CreateOrder",
+          "description": "Create a new order",
+          "detailUrl": "/.well-known/agents/post-api-orders"
+        }
+      ]
+    },
+    {
+      "name": "Weather",
+      "description": "Weather-related operations",
+      "requiredClaims": [
+        "weather:read"
+      ],
+      "endpoints": [
+        {
+          "name": "GetWeather",
+          "description": "Get current weather",
+          "detailUrl": "/.well-known/agents/get-api-weather"
+        },
+        {
+          "name": "GetWeatherForecast",
+          "description": "Get weather forecast",
+          "detailUrl": "/.well-known/agents/get-api-weather-forecast"
+        }
+      ]
+    }
+  ]
+}

@@ -21,14 +21,14 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
     [Fact]
     public async Task GetIndex_ReturnsOk()
     {
-        var response = await _client.GetAsync("/agents");
+        var response = await _client.GetAsync("/.well-known/agents");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
     public async Task GetIndex_ContainsTitleAndDescription()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
         Assert.Equal("Test API", index.Title);
@@ -38,53 +38,54 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
     [Fact]
     public async Task GetIndex_SchemasUrlPointsToSchemasEndpoint()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        Assert.Equal("/agents/schemas", index.SchemasUrl);
+        Assert.Equal("/.well-known/agents/schemas", index.SchemasUrl);
     }
 
     [Fact]
     public async Task GetIndex_IncludesHelloEndpoint()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var hello = index.Endpoints.FirstOrDefault(e => e.Route == "/api/hello");
+        var hello = index.Endpoints.FirstOrDefault(e => e.Name == "Hello");
         Assert.NotNull(hello);
-        Assert.Equal("Hello", hello.Name);
         Assert.Equal("Says hello", hello.Description);
-        Assert.Equal("GET", hello.HttpMethod);
+        Assert.StartsWith("/.well-known/agents/", hello.DetailUrl);
     }
 
     [Fact]
     public async Task GetIndex_ExcludesHiddenEndpoint()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        Assert.DoesNotContain(index.Endpoints, e => e.Route == "/api/hidden");
+        // The hidden endpoint has no AgentNameAttribute so its auto-generated name is
+        // "GET /api/hidden". It must not appear in the index at all.
+        Assert.DoesNotContain(index.Endpoints, e => e.Name == "GET /api/hidden");
     }
 
     [Fact]
     public async Task GetIndex_IncludesPostItemsEndpoint()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        Assert.Contains(index.Endpoints, e => e.Route == "/api/items" && e.HttpMethod == "POST");
+        // No AgentNameAttribute on this endpoint → auto-generated name is "POST /api/items".
+        Assert.Contains(index.Endpoints, e => e.Name == "POST /api/items");
     }
 
     [Fact]
     public async Task GetIndex_EndpointDetailUrlHasCorrectShape()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
 
         Assert.NotNull(index);
-        var hello = index.Endpoints.First(e => e.Route == "/api/hello");
-        Assert.StartsWith("/agents/", hello.DetailUrl);
-        Assert.NotEmpty(hello.Id);
-        Assert.Equal($"/agents/{hello.Id}", hello.DetailUrl);
+        var hello = index.Endpoints.First(e => e.Name == "Hello");
+        Assert.StartsWith("/.well-known/agents/", hello.DetailUrl);
+        Assert.NotEmpty(hello.DetailUrl.TrimStart('/').Split('/').Last());
     }
 
     // -----------------------------------------------------------------------
@@ -94,10 +95,10 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
     [Fact]
     public async Task GetEndpointDetail_ReturnsOkForKnownEndpoint()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
         Assert.NotNull(index);
 
-        var hello = index.Endpoints.First(e => e.Route == "/api/hello");
+        var hello = index.Endpoints.First(e => e.Name == "Hello");
         var response = await _client.GetAsync(hello.DetailUrl);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -105,14 +106,13 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
     [Fact]
     public async Task GetEndpointDetail_ReturnsCorrectData()
     {
-        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/agents");
+        var index = await _client.GetFromJsonAsync<AgentSpecIndex>("/.well-known/agents");
         Assert.NotNull(index);
 
-        var hello = index.Endpoints.First(e => e.Route == "/api/hello");
+        var hello = index.Endpoints.First(e => e.Name == "Hello");
         var detail = await _client.GetFromJsonAsync<AgentEndpointDetail>(hello.DetailUrl);
 
         Assert.NotNull(detail);
-        Assert.Equal(hello.Id, detail.Id);
         Assert.Equal("Hello", detail.Name);
         Assert.Equal("Says hello", detail.Description);
         Assert.Equal("GET", detail.HttpMethod);
@@ -122,7 +122,7 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
     [Fact]
     public async Task GetEndpointDetail_ReturnsNotFoundForUnknownId()
     {
-        var response = await _client.GetAsync("/agents/does-not-exist-xyz");
+        var response = await _client.GetAsync("/.well-known/agents/does-not-exist-xyz");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
@@ -133,14 +133,58 @@ public class AgentSpecEndpointTests : IClassFixture<TestWebAppFactory>
     [Fact]
     public async Task GetSchemas_ReturnsOk()
     {
-        var response = await _client.GetAsync("/agents/schemas");
+        var response = await _client.GetAsync("/.well-known/agents/schemas");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
     public async Task GetSchemas_ReturnsList()
     {
-        var schemas = await _client.GetFromJsonAsync<List<AgentSchemaInfo>>("/agents/schemas");
+        var schemas = await _client.GetFromJsonAsync<List<AgentSchemaInfo>>("/.well-known/agents/schemas");
         Assert.NotNull(schemas);
+    }
+}
+
+/// <summary>
+/// Verifies that <see cref="Aspeckd.Attributes.AgentRequiredClaimsAttribute"/> is surfaced
+/// in the per-endpoint detail document.
+/// </summary>
+public class RequiredClaimsEndpointTests : IClassFixture<GoldenSpecWebAppFactory>
+{
+    private readonly HttpClient _client;
+
+    public RequiredClaimsEndpointTests(GoldenSpecWebAppFactory factory)
+    {
+        _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task GetEndpointDetail_IncludesRequiredClaims()
+    {
+        var detail = await _client.GetFromJsonAsync<AgentEndpointDetail>(
+            "/.well-known/agents/get-api-orders-id");
+
+        Assert.NotNull(detail);
+        Assert.Contains("orders:read", detail.RequiredClaims);
+    }
+
+    [Fact]
+    public async Task GetEndpointDetail_RequiredClaimsEmptyWhenNotDeclared()
+    {
+        var detail = await _client.GetFromJsonAsync<AgentEndpointDetail>(
+            "/.well-known/agents/get-api-status");
+
+        Assert.NotNull(detail);
+        Assert.Empty(detail.RequiredClaims);
+    }
+
+    [Fact]
+    public async Task GetEndpointDetail_PostEndpointHasWriteClaim()
+    {
+        var detail = await _client.GetFromJsonAsync<AgentEndpointDetail>(
+            "/.well-known/agents/post-api-orders");
+
+        Assert.NotNull(detail);
+        Assert.Contains("orders:write", detail.RequiredClaims);
     }
 }

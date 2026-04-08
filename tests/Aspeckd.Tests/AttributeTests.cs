@@ -134,4 +134,30 @@ public class AttributeTests
         Assert.True(usage.Inherited);
         Assert.False(usage.AllowMultiple);
     }
+
+    [Fact]
+    public void AgentRequiredClaimsAttribute_StoresClaims()
+    {
+        var attr = new AgentRequiredClaimsAttribute("orders:read", "orders:write");
+        Assert.Equal(new[] { "orders:read", "orders:write" }, attr.Claims);
+    }
+
+    [Fact]
+    public void AgentRequiredClaimsAttribute_ClaimsDefaultToEmpty()
+    {
+        var attr = new AgentRequiredClaimsAttribute();
+        Assert.Empty(attr.Claims);
+    }
+
+    [Fact]
+    public void AgentRequiredClaimsAttribute_IsInherited()
+    {
+        var usage = typeof(AgentRequiredClaimsAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        Assert.True(usage.Inherited);
+        Assert.False(usage.AllowMultiple);
+    }
 }

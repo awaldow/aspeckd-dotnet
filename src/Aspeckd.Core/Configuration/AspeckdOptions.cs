@@ -7,14 +7,15 @@ public sealed class AspeckdOptions
 {
     /// <summary>
     /// The base path under which all agent spec endpoints are served.
-    /// Defaults to <c>/agents</c>.
+    /// Defaults to <c>/.well-known/agents</c> (following the emerging convention for
+    /// machine-readable agent discovery documents).
     /// <list type="bullet">
     ///   <item><c>{BasePath}</c> — spec index listing all endpoints</item>
     ///   <item><c>{BasePath}/{id}</c> — detail for a single endpoint</item>
     ///   <item><c>{BasePath}/schemas</c> — all response/request schemas</item>
     /// </list>
     /// </summary>
-    public string BasePath { get; set; } = "/agents";
+    public string BasePath { get; set; } = "/.well-known/agents";
 
     /// <summary>
     /// Optional title shown in the agent spec index.

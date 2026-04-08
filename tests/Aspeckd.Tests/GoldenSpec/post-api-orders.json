@@ -1,0 +1,24 @@
+{
+  "id": "post-api-orders",
+  "name": "CreateOrder",
+  "httpMethod": "POST",
+  "route": "/api/orders",
+  "description": "Create a new order",
+  "requiredClaims": [
+    "orders:write"
+  ],
+  "consumesContentTypes": [
+    "application/json"
+  ],
+  "responseTypes": {
+    "200": []
+  },
+  "parameters": [
+    {
+      "name": "GoldenOrderRequest",
+      "source": "Body",
+      "type": "GoldenOrderRequest",
+      "isRequired": true
+    }
+  ]
+}

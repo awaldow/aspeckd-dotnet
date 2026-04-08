@@ -5,10 +5,10 @@ namespace Aspeckd.Tests;
 public class AspeckdOptionsTests
 {
     [Fact]
-    public void DefaultBasePath_IsAgents()
+    public void DefaultBasePath_IsWellKnownAgents()
     {
         var options = new AspeckdOptions();
-        Assert.Equal("/agents", options.BasePath);
+        Assert.Equal("/.well-known/agents", options.BasePath);
     }
 
     [Fact]

@@ -1,11 +1,11 @@
 namespace Aspeckd.Models;
 
 /// <summary>
-/// Full detail for a single API endpoint, served at <c>/agents/{id}</c>.
+/// Full detail for a single API endpoint, served at <c>/.well-known/agents/{id}</c>.
 /// </summary>
 public sealed class AgentEndpointDetail
 {
-    /// <summary>Stable identifier for the endpoint (matches <see cref="AgentEndpointSummary.Id"/>).</summary>
+    /// <summary>Stable identifier for the endpoint (e.g. <c>get-api-weather</c>).</summary>
     public string Id { get; init; } = string.Empty;
 
     /// <summary>Human-readable name for the endpoint.</summary>
@@ -19,6 +19,13 @@ public sealed class AgentEndpointDetail
 
     /// <summary>Agent-focused description, or the standard OpenAPI summary when available.</summary>
     public string? Description { get; init; }
+
+    /// <summary>
+    /// Authorization claim types required to call this endpoint, declared via
+    /// <see cref="Aspeckd.Attributes.AgentRequiredClaimsAttribute"/>.
+    /// Empty when no endpoint-level claim requirements are declared.
+    /// </summary>
+    public IReadOnlyList<string> RequiredClaims { get; init; } = [];
 
     /// <summary>
     /// Content types accepted by this endpoint (from <c>[Consumes]</c> metadata).
