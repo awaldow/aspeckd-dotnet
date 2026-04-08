@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using Aspeckd.Attributes;
 using Aspeckd.Configuration;
 using Aspeckd.Extensions;
 using Aspeckd.Models;
@@ -631,4 +634,247 @@ internal sealed class StaticVersionedWebAppFactory
             }));
         return base.CreateHost(builder);
     }
+}
+
+// -----------------------------------------------------------------------
+// Auto-detection of versions from IApiVersionDescriptionProvider
+// -----------------------------------------------------------------------
+
+/// <summary>
+/// Integration tests verifying that <c>MapAgentSpec()</c> auto-detects API versions
+/// from <c>IApiVersionDescriptionProvider</c> when no explicit
+/// <see cref="AspeckdVersionOptions"/> are configured.
+/// </summary>
+public class ApiVersionAutoDetectionTests : IClassFixture<AutoDetectedVersionWebAppFactory>
+{
+    private readonly HttpClient _client;
+
+    public ApiVersionAutoDetectionTests(AutoDetectedVersionWebAppFactory factory)
+        => _client = factory.CreateClient();
+
+    [Fact]
+    public async Task AutoDetect_Root_ReturnsVersionIndex()
+    {
+        var index = await _client.GetFromJsonAsync<AgentVersionIndex>("/.well-known/agents");
+
+        Assert.NotNull(index);
+        Assert.Equal(2, index.Versions.Count);
+    }
+
+    [Fact]
+    public async Task AutoDetect_Versions_HaveCorrectStatus()
+    {
+        var index = await _client.GetFromJsonAsync<AgentVersionIndex>("/.well-known/agents");
+
+        Assert.NotNull(index);
+        var v1 = index.Versions.First(v => v.Version == "v1");
+        var v2 = index.Versions.First(v => v.Version == "v2");
+        Assert.Equal("deprecated", v1.Status);
+        Assert.Equal("active", v2.Status);
+    }
+
+    [Fact]
+    public async Task AutoDetect_SunsetDate_IsForwardedFromSunsetPolicy()
+    {
+        var index = await _client.GetFromJsonAsync<AgentVersionIndex>("/.well-known/agents");
+
+        Assert.NotNull(index);
+        var v1 = index.Versions.First(v => v.Version == "v1");
+        Assert.Equal("2026-09-01", v1.SunsetDate);
+    }
+
+    [Fact]
+    public async Task AutoDetect_IndexUrl_PointsToVersionedPath()
+    {
+        var index = await _client.GetFromJsonAsync<AgentVersionIndex>("/.well-known/agents");
+
+        Assert.NotNull(index);
+        Assert.All(index.Versions, v =>
+            Assert.Equal($"/.well-known/agents/{v.Version}", v.IndexUrl));
+    }
+
+    [Fact]
+    public async Task AutoDetect_VersionedRoute_Returns200()
+    {
+        var v1Response = await _client.GetAsync("/.well-known/agents/v1");
+        var v2Response = await _client.GetAsync("/.well-known/agents/v2");
+
+        Assert.Equal(HttpStatusCode.OK, v1Response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, v2Response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AutoDetect_UnknownVersion_Returns404()
+    {
+        var response = await _client.GetAsync("/.well-known/agents/v99");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+}
+
+/// <summary>
+/// Integration tests verifying that explicitly configured
+/// <see cref="AspeckdVersionOptions.Versions"/> take precedence over auto-detected versions
+/// from <c>IApiVersionDescriptionProvider</c>.
+/// </summary>
+public class ExplicitVersionsPrecedenceTests : IClassFixture<ExplicitVersionsPrecedenceWebAppFactory>
+{
+    private readonly HttpClient _client;
+
+    public ExplicitVersionsPrecedenceTests(ExplicitVersionsPrecedenceWebAppFactory factory)
+        => _client = factory.CreateClient();
+
+    [Fact]
+    public async Task ExplicitVersions_TakePrecedenceOverAutoDetected()
+    {
+        var index = await _client.GetFromJsonAsync<AgentVersionIndex>("/.well-known/agents");
+
+        Assert.NotNull(index);
+        // Only the explicitly configured version "v3" should appear, NOT "v1" or "v2" from IApiVersionDescriptionProvider.
+        Assert.Single(index.Versions);
+        Assert.Equal("v3", index.Versions[0].Version);
+    }
+}
+
+/// <summary>
+/// Web app factory that registers a stub <see cref="IApiVersionDescriptionProvider"/> with
+/// two versions (v1 deprecated with sunset date, v2 active) but does NOT set
+/// <see cref="AspeckdOptions.Versions"/> explicitly, so auto-detection kicks in.
+/// </summary>
+public sealed class AutoDetectedVersionWebAppFactory
+    : WebApplicationFactory<AutoDetectedVersionWebAppFactory>
+{
+    protected override IHostBuilder CreateHostBuilder()
+    {
+        return Host.CreateDefaultBuilder()
+            .ConfigureWebHost(web =>
+            {
+                web.UseTestServer();
+                web.ConfigureServices(services =>
+                {
+                    services.AddRouting();
+                    services.AddAgentSpec(opt => opt.Title = "Auto-Detected API");
+
+                    // Register a stub IApiVersionDescriptionProvider — NO opt.Versions configured.
+                    services.AddSingleton<IApiVersionDescriptionProvider>(
+                        new StubApiVersionDescriptionProvider(
+                        [
+                            new ApiVersionDescription(
+                                new ApiVersion(1, 0),
+                                "v1",
+                                deprecated: true,
+                                new SunsetPolicy(
+                                    new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero))),
+                            new ApiVersionDescription(
+                                new ApiVersion(2, 0),
+                                "v2",
+                                deprecated: false)
+                        ]));
+
+                    services.AddControllers();
+                    services.AddEndpointsApiExplorer();
+                });
+                web.Configure(app =>
+                {
+                    app.UseRouting();
+                    app.UseEndpoints(endpoints =>
+                    {
+                        // A v1 endpoint (will be in default API description group).
+                        // We register it under a route that the group-name filter would match
+                        // if Asp.Versioning were fully wired, but here we just verify HTTP responses.
+                        endpoints.MapGet(
+                            "/api/v1/weather",
+                            [AgentDescription("Get v1 weather")]
+                            [AgentName("GetWeatherV1")]
+                            () => Results.Ok("v1-weather"));
+
+                        endpoints.MapAgentSpec();
+                    });
+                });
+            });
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var contentRoot = Path.GetDirectoryName(typeof(AutoDetectedVersionWebAppFactory).Assembly.Location)!;
+        builder.ConfigureHostConfiguration(config =>
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [WebHostDefaults.ContentRootKey] = contentRoot
+            }));
+        return base.CreateHost(builder);
+    }
+}
+
+/// <summary>
+/// Web app factory that registers BOTH a stub <see cref="IApiVersionDescriptionProvider"/>
+/// (v1, v2) AND explicit <see cref="AspeckdOptions.Versions"/> (v3).  Used to verify that
+/// explicit configuration always wins.
+/// </summary>
+public sealed class ExplicitVersionsPrecedenceWebAppFactory
+    : WebApplicationFactory<ExplicitVersionsPrecedenceWebAppFactory>
+{
+    protected override IHostBuilder CreateHostBuilder()
+    {
+        return Host.CreateDefaultBuilder()
+            .ConfigureWebHost(web =>
+            {
+                web.UseTestServer();
+                web.ConfigureServices(services =>
+                {
+                    services.AddRouting();
+                    services.AddAgentSpec(opt =>
+                    {
+                        opt.Title = "Precedence Test API";
+                        // Explicit versions — should win over IApiVersionDescriptionProvider.
+                        opt.Versions =
+                        [
+                            new AspeckdVersionOptions { Version = "v3", Status = "active" }
+                        ];
+                    });
+
+                    // Also register a stub provider that returns v1 and v2.
+                    services.AddSingleton<IApiVersionDescriptionProvider>(
+                        new StubApiVersionDescriptionProvider(
+                        [
+                            new ApiVersionDescription(
+                                new ApiVersion(1, 0), "v1", false),
+                            new ApiVersionDescription(
+                                new ApiVersion(2, 0), "v2", false)
+                        ]));
+
+                    services.AddControllers();
+                    services.AddEndpointsApiExplorer();
+                });
+                web.Configure(app =>
+                {
+                    app.UseRouting();
+                    app.UseEndpoints(endpoints => endpoints.MapAgentSpec());
+                });
+            });
+    }
+
+    protected override IHost CreateHost(IHostBuilder builder)
+    {
+        var contentRoot = Path.GetDirectoryName(typeof(ExplicitVersionsPrecedenceWebAppFactory).Assembly.Location)!;
+        builder.ConfigureHostConfiguration(config =>
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [WebHostDefaults.ContentRootKey] = contentRoot
+            }));
+        return base.CreateHost(builder);
+    }
+}
+
+/// <summary>
+/// Minimal stub implementation of <see cref="IApiVersionDescriptionProvider"/> for testing
+/// the auto-detection path in <c>MapAgentSpec()</c>.
+/// </summary>
+internal sealed class StubApiVersionDescriptionProvider : IApiVersionDescriptionProvider
+{
+    public StubApiVersionDescriptionProvider(
+        IReadOnlyList<ApiVersionDescription> descriptions)
+        => ApiVersionDescriptions = descriptions;
+
+    public IReadOnlyList<ApiVersionDescription> ApiVersionDescriptions { get; }
 }

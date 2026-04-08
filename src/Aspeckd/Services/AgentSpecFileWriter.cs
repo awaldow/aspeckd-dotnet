@@ -199,6 +199,23 @@ public static class AgentSpecFileWriter
         AspeckdOptions aspeckdOptions,
         string versionedBasePath)
     {
+        // When GroupName is set and the provider supports group filtering, delegate to that.
+        // This supports non-URL-segment versioning strategies (query-string, header, etc.).
+        if (!string.IsNullOrEmpty(versionConfig.GroupName)
+            && provider is IGroupFilteredAgentSpecProvider groupProvider)
+        {
+            var groupIndex = groupProvider.GetIndexForGroup(versionConfig.GroupName, versionedBasePath);
+            return new AgentSpecIndex
+            {
+                Title = versionConfig.Title ?? aspeckdOptions.Title ?? "API",
+                Description = versionConfig.Description ?? aspeckdOptions.Description,
+                SchemasUrl = groupIndex.SchemasUrl,
+                Endpoints = groupIndex.Endpoints,
+                Groups = groupIndex.Groups,
+                Auth = aspeckdOptions.Auth
+            };
+        }
+
         var filteredEndpoints = FilterAndRekeyEndpoints(
             provider, fullIndex.Endpoints, versionConfig.UrlPrefix, versionedBasePath);
 

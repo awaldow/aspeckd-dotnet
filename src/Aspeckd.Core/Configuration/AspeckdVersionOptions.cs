@@ -47,5 +47,21 @@ public sealed class AspeckdVersionOptions
     /// When <see langword="null"/> all endpoints are included in this version's tree.
     /// This supports URL segment versioning conventions such as <c>/api/v{version}/...</c>.
     /// </summary>
+    /// <remarks>
+    /// When <see cref="GroupName"/> is also set, group-name filtering takes precedence over
+    /// this URL prefix for dynamic (runtime) providers.  Static file writers continue to use
+    /// URL prefix filtering because group information is not available at write time.
+    /// </remarks>
     public string? UrlPrefix { get; set; }
+
+    /// <summary>
+    /// The <see cref="Microsoft.AspNetCore.Mvc.ApiExplorer.ApiDescriptionGroup.GroupName"/> that
+    /// identifies the set of endpoints belonging to this version.
+    /// Populated automatically when versions are auto-detected from
+    /// <c>Asp.Versioning.IApiVersionDescriptionProvider</c>; can also be set manually when
+    /// the API uses non-URL-segment versioning (query-string, header, etc.) where
+    /// <see cref="UrlPrefix"/> would not correctly scope the endpoint list.
+    /// When <see langword="null"/> the filter falls back to <see cref="UrlPrefix"/>.
+    /// </summary>
+    public string? GroupName { get; set; }
 }

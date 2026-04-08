@@ -21,7 +21,7 @@ namespace Aspeckd.Services;
 /// .NET 8/9 (v1.6) and .NET 10+ (v2+) — can be handled here with <c>#if</c> guards without
 /// touching the stable core abstractions.
 /// </remarks>
-internal sealed class AgentSpecProvider : IAgentSpecProvider
+internal sealed class AgentSpecProvider : IAgentSpecProvider, IGroupFilteredAgentSpecProvider
 {
     private readonly IApiDescriptionGroupCollectionProvider _apiDescriptionProvider;
     private readonly AspeckdOptions _options;
@@ -101,12 +101,79 @@ internal sealed class AgentSpecProvider : IAgentSpecProvider
     }
 
     // -------------------------------------------------------------------------
+    // IGroupFilteredAgentSpecProvider — group-name-scoped access (Asp.Versioning)
+    // -------------------------------------------------------------------------
+
+    AgentSpecIndex IGroupFilteredAgentSpecProvider.GetIndexForGroup(string groupName, string versionedBasePath)
+    {
+        var descriptions = GetVisibleDescriptionsForGroup(groupName)
+            .OrderBy(d => d.HttpMethod ?? string.Empty, StringComparer.Ordinal)
+            .ThenBy(d => d.RelativePath ?? string.Empty, StringComparer.Ordinal)
+            .ToList();
+
+        var endpoints = descriptions
+            .Select(d => BuildIndexEntry(d, versionedBasePath))
+            .ToList();
+
+        var groups = BuildGroups(descriptions, versionedBasePath);
+
+        return new AgentSpecIndex
+        {
+            Title = _options.Title ?? "API",
+            Description = _options.Description,
+            SchemasUrl = $"{versionedBasePath}/schemas",
+            Endpoints = endpoints,
+            Groups = groups,
+            Auth = _options.Auth
+        };
+    }
+
+    AgentEndpointDetail? IGroupFilteredAgentSpecProvider.GetEndpointDetailForGroup(string id, string groupName)
+    {
+        var description = GetVisibleDescriptionsForGroup(groupName)
+            .FirstOrDefault(d => BuildId(d) == id);
+        return description is null ? null : BuildDetail(description);
+    }
+
+    IReadOnlyList<AgentSchemaInfo> IGroupFilteredAgentSpecProvider.GetSchemasForGroup(string groupName)
+    {
+        var types = new HashSet<Type>();
+        foreach (var description in GetVisibleDescriptionsForGroup(groupName))
+        {
+            foreach (var responseType in description.SupportedResponseTypes)
+            {
+                if (responseType.Type is not null && responseType.Type != typeof(void))
+                    types.Add(responseType.Type);
+            }
+
+            foreach (var param in description.ParameterDescriptions)
+            {
+                if (param.Type is not null)
+                    types.Add(param.Type);
+            }
+        }
+
+        return types
+            .OrderBy(t => t.Name)
+            .Select(t => new AgentSchemaInfo { Name = t.Name })
+            .ToList();
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
     private IEnumerable<ApiDescription> GetVisibleDescriptions()
     {
         return _apiDescriptionProvider.ApiDescriptionGroups.Items
+            .SelectMany(g => g.Items)
+            .Where(d => !IsExcluded(d));
+    }
+
+    private IEnumerable<ApiDescription> GetVisibleDescriptionsForGroup(string groupName)
+    {
+        return _apiDescriptionProvider.ApiDescriptionGroups.Items
+            .Where(g => string.Equals(g.GroupName, groupName, StringComparison.OrdinalIgnoreCase))
             .SelectMany(g => g.Items)
             .Where(d => !IsExcluded(d));
     }
