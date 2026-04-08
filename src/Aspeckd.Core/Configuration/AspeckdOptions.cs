@@ -64,4 +64,23 @@ public sealed class AspeckdOptions
     /// <see langword="null"/> when versioning is not configured or no default is set.
     /// </summary>
     public string? DefaultVersion { get; set; }
+    /// When <see langword="true"/>, Aspeckd emits build-time warnings (via <c>ILogger</c>)
+    /// for endpoint and group descriptions that are null, empty, or shorter than
+    /// <see cref="MinimumDescriptionLength"/> characters.
+    /// Defaults to <see langword="true"/>.
+    /// </summary>
+    /// <remarks>
+    /// Set to <see langword="false"/> to disable all description-quality warnings globally.
+    /// To suppress warnings for individual endpoints only, use
+    /// <see cref="Attributes.AspeckdSuppressWarningAttribute"/> instead.
+    /// </remarks>
+    public bool DescriptionWarnings { get; set; } = true;
+
+    /// <summary>
+    /// The minimum number of characters a description must contain before Aspeckd
+    /// considers it adequately descriptive for agent consumption.
+    /// Descriptions shorter than this threshold trigger an <c>ASPECKD001</c> warning.
+    /// Defaults to <c>30</c>.
+    /// </summary>
+    public int MinimumDescriptionLength { get; set; } = 30;
 }
