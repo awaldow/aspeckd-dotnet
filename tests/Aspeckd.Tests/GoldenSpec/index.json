@@ -55,7 +55,10 @@
           "description": "Create a new order",
           "detailUrl": "/.well-known/agents/post-api-orders"
         }
-      ]
+      ],
+      "auth": {
+        "instructions": "Order operations require the orders role. Request access through the Azure portal."
+      }
     },
     {
       "name": "Weather",
@@ -74,7 +77,13 @@
           "description": "Get weather forecast",
           "detailUrl": "/.well-known/agents/get-api-weather-forecast"
         }
-      ]
+      ],
+      "auth": null
     }
-  ]
+  ],
+  "auth": {
+    "scheme": "bearer",
+    "headerName": "Authorization",
+    "instructions": "This API uses Azure AD tokens. Ensure you have an active session with the appropriate role assignments."
+  }
 }

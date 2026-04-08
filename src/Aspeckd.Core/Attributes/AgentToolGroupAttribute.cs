@@ -29,6 +29,16 @@ public sealed class AgentToolGroupAttribute : Attribute
     /// </summary>
     public string[] RequiredClaims { get; init; } = [];
 
+    /// <summary>
+    /// Gets the human-readable authentication instructions specific to this group.
+    /// When set, these instructions override the <c>instructions</c> field from the
+    /// root-level auth block for endpoints in this group.  Useful when a subset of
+    /// endpoints requires elevated access beyond the API baseline (for example, PIM
+    /// activation or a specific role assignment).
+    /// Markdown content is supported.
+    /// </summary>
+    public string? AuthInstructions { get; init; }
+
     /// <param name="name">A short, human-readable name for the group (e.g. <c>"Weather"</c>).</param>
     public AgentToolGroupAttribute(string name)
     {

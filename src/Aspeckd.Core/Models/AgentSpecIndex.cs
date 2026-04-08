@@ -28,4 +28,11 @@ public sealed class AgentSpecIndex
     /// authorization claims. Empty when no groups are defined.
     /// </summary>
     public IReadOnlyList<AgentToolGroup> Groups { get; init; } = [];
+
+    /// <summary>
+    /// Root-level authentication information that describes the API's overall auth mechanism.
+    /// Agents read this to understand how to send credentials and whether programmatic
+    /// token acquisition is possible. <see langword="null"/> when no auth is configured.
+    /// </summary>
+    public AgentAuthInfo? Auth { get; init; }
 }
